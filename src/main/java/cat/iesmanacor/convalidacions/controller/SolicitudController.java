@@ -87,12 +87,12 @@ public class SolicitudController {
     public ResponseEntity<Solicitud> getConvalidacionsById(@PathVariable("id") String idsolicitud) throws IOException, GeneralSecurityException {
         Solicitud solicitudConvalidacio = solicitudService.getSolicitudConvalidacioById(Long.valueOf(idsolicitud));
 
-        for(Long idFitxerBucket: solicitudConvalidacio.getFitxersAlumne()){
+        for (Long idFitxerBucket : solicitudConvalidacio.getFitxersAlumne()) {
 
             ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.getFitxerBucketById(idFitxerBucket);
             FitxerBucketDto fitxerBucket = fitxerBucketResponse.getBody();
 
-            if(fitxerBucket!=null) {
+            if (fitxerBucket != null) {
                 JsonObject jsonFitxerBucket = new JsonObject();
                 jsonFitxerBucket.addProperty("idfitxer", fitxerBucket.getIdfitxer());
                 jsonFitxerBucket.addProperty("nom", fitxerBucket.getNom());
@@ -109,13 +109,37 @@ public class SolicitudController {
         return new ResponseEntity<>(solicitudConvalidacio, HttpStatus.OK);
     }
 
-    @PostMapping({"/solicitud/calculconvalidacio","/public/solicitud/calculconvalidacio"})
+    @PostMapping({"/solicitud/calculconvalidacio", "/public/solicitud/calculconvalidacio"})
     public ResponseEntity<List<Item>> calculaConvalidacions(@RequestBody Solicitud solicitud) {
 
         List<Item> result = solicitudService.calculaConvalidacions(solicitud);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
+    @PostMapping("/solicitud/changeEstat")
+    public ResponseEntity<Notificacio> canviarEstat(@RequestBody String json) {
+
+        JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
+
+        Long idSolicitud = jsonObject.get("id").getAsLong();
+        String estat = jsonObject.get("estat").getAsString();
+
+        Solicitud solicitud = solicitudService.getSolicitudConvalidacioById(idSolicitud);
+
+        if(estat.equals("pendent")) {
+            solicitud.setEstat(SolcititudEstat.PENDENT_RESOLUCIO);
+        } else if(estat.equals("standby")) {
+            solicitud.setEstat(SolcititudEstat.STAND_BY);
+        }
+        solicitudService.save(solicitud);
+
+        Notificacio notificacio = new Notificacio();
+        notificacio.setNotifyMessage("Sol·licitud desada correctament");
+        notificacio.setNotifyType(NotificacioTipus.SUCCESS);
+        return new ResponseEntity<>(notificacio, HttpStatus.OK);
+    }
+
 
     @PostMapping("/solicitud/desar")
     public ResponseEntity<Notificacio> desarSolicitud(@RequestBody String json, HttpServletRequest request) throws Exception {
