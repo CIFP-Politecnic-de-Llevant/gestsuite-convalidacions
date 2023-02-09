@@ -44,17 +44,17 @@ public class SolicitudService {
 
     @Transactional
     public void esborrarEstudisOrigenSolicitud(Solicitud solicitud) {
-        Set<Item> estudisOrigen = new HashSet<>(solicitudRepository.getById(solicitud.getIdsolicitud()).getEstudisOrigen());
+        Set<Item> estudisOrigen = new HashSet<>(solicitudRepository.findById(solicitud.getIdsolicitud()).get().getEstudisOrigen());
         for (Item estudiOrigen : estudisOrigen) {
-            solicitudRepository.getById(solicitud.getIdsolicitud()).getEstudisOrigen().remove(estudiOrigen);
+            solicitudRepository.findById(solicitud.getIdsolicitud()).get().getEstudisOrigen().remove(estudiOrigen);
         }
     }
 
     @Transactional
     public void esborrarResolucionsSolicitud(Solicitud solicitud) {
-        Set<Resolucio> resolucions = new HashSet<>(solicitudRepository.getById(solicitud.getIdsolicitud()).getResolucions());
+        Set<Resolucio> resolucions = new HashSet<>(solicitudRepository.findById(solicitud.getIdsolicitud()).get().getResolucions());
         for (Resolucio resolucio: resolucions) {
-            solicitudRepository.getById(solicitud.getIdsolicitud()).getResolucions().remove(resolucio);
+            solicitudRepository.findById(solicitud.getIdsolicitud()).get().getResolucions().remove(resolucio);
             resolucioRepository.delete(resolucio);
         }
     }
