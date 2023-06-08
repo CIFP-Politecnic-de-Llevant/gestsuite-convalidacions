@@ -42,6 +42,13 @@ public class ItemController {
         return new ResponseEntity<>(items, HttpStatus.OK);
     }
 
+    @GetMapping({"/titulacions/all","/public/titulacions/all"})
+    public ResponseEntity<List<Item>> getTitulacionsTotes() {
+        List<Item> items = itemService.findAllTitulacions();
+
+        return new ResponseEntity<>(items, HttpStatus.OK);
+    }
+
     @GetMapping({"/titulacionscentre","/public/titulacionscentre"})
     public ResponseEntity<List<Item>> getTitulacionsImpartidesAlCentre() {
         List<Item> items = itemService.findAllTitulacionsImpartidesAlCentre();
