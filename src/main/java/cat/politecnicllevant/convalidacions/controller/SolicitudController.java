@@ -4,7 +4,7 @@ import cat.politecnicllevant.common.model.Notificacio;
 import cat.politecnicllevant.common.model.NotificacioTipus;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
-import cat.iesmanacor.convalidacions.model.*;
+import cat.politecnicllevant.convalidacions.model.*;
 import cat.politecnicllevant.convalidacions.pdf.service.PdfService;
 import cat.politecnicllevant.convalidacions.restclient.CoreRestClient;
 import cat.politecnicllevant.convalidacions.service.ConvalidacioService;
@@ -12,7 +12,7 @@ import cat.politecnicllevant.convalidacions.service.ItemService;
 import cat.politecnicllevant.convalidacions.service.ResolucioService;
 import cat.politecnicllevant.convalidacions.service.SolicitudService;
 
-//import cat.iesmanacor.pdf.service.PdfService;
+//import cat.politecnicllevant.pdf.service.PdfService;
 import cat.politecnicllevant.convalidacions.model.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
