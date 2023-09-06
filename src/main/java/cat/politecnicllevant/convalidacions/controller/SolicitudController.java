@@ -72,6 +72,9 @@ public class SolicitudController {
     @Value("${gc.storage.bucketnamedata}")
     private String bucketName;
 
+    @Value("${gc.storage.convalidacions.path-files}")
+    private String bucketPathFiles;
+
 
     @GetMapping("/solicitud/llistat")
     public ResponseEntity<List<Solicitud>> getSolicituds() {
@@ -340,7 +343,7 @@ public class SolicitudController {
                 File arxiu = new File(pathArxiu);
                 System.out.println("Arxiu desat a " + pathArxiu);
 
-                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject("iesmanacor/convalidacions/filesalumnes/" + arxiu.getName(), pathArxiu, bucketName);
+                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(bucketPathFiles + arxiu.getName(), pathArxiu, bucketName);
                 FitxerBucketDto fitxerBucket = fitxerBucketResponse.getBody();
 
                 ResponseEntity<FitxerBucketDto> fitxerBucketSavedResponse = coreRestClient.save(fitxerBucket);
