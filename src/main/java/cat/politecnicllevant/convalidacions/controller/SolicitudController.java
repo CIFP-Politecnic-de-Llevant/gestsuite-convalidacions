@@ -610,10 +610,12 @@ public class SolicitudController {
                 coreRestClient.sendEmail(alumne.getGsuiteEmail(),"Resolució de convalidació",body,fileSigned);
 
                 body = "Còpia del missatge enviat a "+nomAlumne+": <br><br>" + body;
-                coreRestClient.sendEmail("mamengual@iesmanacor.cat","Resolució de convalidació",body,fileSigned);
-                coreRestClient.sendEmail("mvallespir@iesmanacor.cat","Resolució de convalidació",body,fileSigned);
-                coreRestClient.sendEmail("jgalmes1@iesmanacor.cat","Resolució de convalidació",body,fileSigned);
 
+                String[] emailsResolucio = this.notificarResolucionsEmails.split(",");
+
+                for(String email: emailsResolucio){
+                    coreRestClient.sendEmail(email,"Resolució de convalidació",body,fileSigned);
+                }
 
                 Notificacio notificacio = new Notificacio();
                 notificacio.setNotifyMessage("PDF Signat amb èxit");
