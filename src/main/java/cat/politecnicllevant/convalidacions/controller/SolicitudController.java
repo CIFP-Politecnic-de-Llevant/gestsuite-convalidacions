@@ -2,6 +2,7 @@ package cat.politecnicllevant.convalidacions.controller;
 
 import cat.politecnicllevant.common.model.Notificacio;
 import cat.politecnicllevant.common.model.NotificacioTipus;
+import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
 import cat.politecnicllevant.convalidacions.model.*;
@@ -34,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -605,7 +607,7 @@ public class SolicitudController {
                 String body = "";
                 body += "Benvolgut/da "+ nomAlumne +", ";
                 body += "<br><br>";
-                body += "Des de l'IES Manacor us fem arribar la <strong>resolució</strong> de la convalidació sol·licitada a l'IES Manacor.";
+                body += "Des de Politècnic de Llevant us fem arribar la <strong>resolució</strong> de la convalidació sol·licitada a l'IES Manacor.";
 
                 coreRestClient.sendEmail(alumne.getGsuiteEmail(),"Resolució de convalidació",body,fileSigned);
 
@@ -615,6 +617,43 @@ public class SolicitudController {
 
                 for(String email: emailsResolucio){
                     coreRestClient.sendEmail(email,"Resolució de convalidació",body,fileSigned);
+                }
+
+                //Notifiguem als tutors
+                GrupDto grup = null;
+                if(alumne.getGestibGrup()!=null) {
+                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getGrupById(Long.parseLong(alumne.getGestibGrup()));
+                    grup = grupResponse.getBody();
+                } else if(alumne.getGestibGrup2() != null ){
+                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getGrupById(Long.parseLong(alumne.getGestibGrup2()));
+                    grup = grupResponse.getBody();
+                } else if(alumne.getGestibGrup3() != null ){
+                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getGrupById(Long.parseLong(alumne.getGestibGrup3()));
+                    grup = grupResponse.getBody();
+                }
+
+                if(grup != null){
+                    List<UsuariDto> tutors = new ArrayList<>();
+                    if(grup.getGestibTutor1()!=null){
+                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getProfile(grup.getGestibTutor1());
+                        UsuariDto tutor = tutorResponse.getBody();
+                        tutors.add(tutor);
+                    }
+                    if(grup.getGestibTutor2()!=null){
+                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getProfile(grup.getGestibTutor2());
+                        UsuariDto tutor = tutorResponse.getBody();
+                        tutors.add(tutor);
+                    }
+                    if(grup.getGestibTutor3()!=null){
+                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getProfile(grup.getGestibTutor3());
+                        UsuariDto tutor = tutorResponse.getBody();
+                        tutors.add(tutor);
+                    }
+
+                    //Enviem el correu al/s tutor/s
+                    for(UsuariDto tutor: tutors){
+                        coreRestClient.sendEmail(tutor.getGsuiteEmail(),"Resolució de convalidació",body,fileSigned);
+                    }
                 }
 
                 Notificacio notificacio = new Notificacio();

@@ -1,5 +1,6 @@
 package cat.politecnicllevant.convalidacions.restclient;
 
+import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -41,4 +42,8 @@ public interface CoreRestClient {
     //GMAIL
     @PostMapping(value="/gsuite/sendemailattachment")
     void sendEmail(@RequestParam("to") String to, @RequestParam("assumpte") String assumpte, @RequestParam("body") String bodyHTML, @RequestParam File file) throws IOException, MessagingException, GeneralSecurityException;
+
+    //GRUP
+    @GetMapping("/grup/getById/{idgrup}")
+    ResponseEntity<GrupDto> getGrupById(@PathVariable("idgrup") Long idgrup);
 }
