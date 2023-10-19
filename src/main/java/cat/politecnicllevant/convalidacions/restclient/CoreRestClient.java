@@ -6,6 +6,7 @@ import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.MessagingException;
 import java.io.File;
@@ -35,6 +36,9 @@ public interface CoreRestClient {
 
     @PostMapping("/googlestorage/uploadobject")
     ResponseEntity<FitxerBucketDto> uploadObject(@RequestParam("objectName") String objectName, @RequestParam("filePath") String filePath, @RequestParam("bucket") String bucket) throws IOException, GeneralSecurityException;
+
+    @PostMapping("/googlestorage/uploadobjectfile")
+    ResponseEntity<FitxerBucketDto> uploadObjectFile(@RequestParam("objectName") String objectName, @RequestParam("bucket") String bucket, @RequestPart(value = "file") final File uploadfile) throws IOException, GeneralSecurityException;
 
     @PostMapping("/googlestorage/delete")
     void deleteObject(@RequestParam("objectName") String objectName, @RequestParam("bucket") String bucket) throws IOException, GeneralSecurityException;
