@@ -37,7 +37,7 @@ public interface CoreRestClient {
     @PostMapping("/googlestorage/uploadobject")
     ResponseEntity<FitxerBucketDto> uploadObject(@RequestParam("objectName") String objectName, @RequestParam("filePath") String filePath, @RequestParam("bucket") String bucket) throws IOException, GeneralSecurityException;
 
-    @PostMapping("/googlestorage/uploadobjectfile")
+    @PostMapping(value = "/googlestorage/uploadobjectfile", consumes = "multipart/form-data")
     ResponseEntity<FitxerBucketDto> uploadObjectFile(@RequestParam("objectName") String objectName, @RequestParam("bucket") String bucket, @RequestPart(value = "file") final File uploadfile) throws IOException, GeneralSecurityException;
 
     @PostMapping("/googlestorage/delete")
