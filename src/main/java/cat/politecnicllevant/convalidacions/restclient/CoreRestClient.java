@@ -3,7 +3,18 @@ package cat.politecnicllevant.convalidacions.restclient;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
+import feign.form.spring.SpringFormEncoder;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.support.SpringEncoder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.codec.Encoder;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,9 +47,6 @@ public interface CoreRestClient {
 
     @PostMapping("/googlestorage/uploadobject")
     ResponseEntity<FitxerBucketDto> uploadObject(@RequestParam("objectName") String objectName, @RequestParam("filePath") String filePath, @RequestParam("bucket") String bucket) throws IOException, GeneralSecurityException;
-
-    @PostMapping(value = "/googlestorage/uploadobjectfile", headers = {"Content: multipart/form-data"})
-    ResponseEntity<FitxerBucketDto> uploadObjectFile(@RequestParam("objectName") String objectName, @RequestParam("bucket") String bucket, @RequestPart(value = "file") final File uploadfile) throws IOException, GeneralSecurityException;
 
     @PostMapping("/googlestorage/delete")
     void deleteObject(@RequestParam("objectName") String objectName, @RequestParam("bucket") String bucket) throws IOException, GeneralSecurityException;
