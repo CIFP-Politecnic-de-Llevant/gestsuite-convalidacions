@@ -1,5 +1,6 @@
 package cat.politecnicllevant.convalidacions.restclient;
 
+import cat.politecnicllevant.convalidacions.config.FeignSupportConfig;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
@@ -24,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-@FeignClient(name = "core")
+@FeignClient(name = "core", configuration = FeignSupportConfig.class)
 public interface CoreRestClient {
 
     //USUARIS
@@ -40,6 +41,12 @@ public interface CoreRestClient {
 
     @PostMapping("/fitxerbucket/delete")
     void delete(@RequestBody FitxerBucketDto fitxerBucket);
+
+    @PostMapping("/public/fitxerbucket/uploadlocal")
+    ResponseEntity<String> handleFileUpload(@RequestPart(value = "file") final MultipartFile uploadfile) throws IOException;
+
+    @PostMapping(value = "/public/fitxerbucket/uploadlocal2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<String> handleFileUpload2(@RequestPart(value = "file") final File uploadfile) throws IOException;
 
     //GOOGLE STORAGE
     @PostMapping(value = "/googlestorage/generate-signed-url")

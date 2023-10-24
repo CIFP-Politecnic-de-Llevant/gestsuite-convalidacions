@@ -24,9 +24,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
@@ -577,6 +581,9 @@ public class SolicitudController {
             if(signed){
                 String fileNameSigned = "/tmp/arxiu_signed.pdf";
                 File fileSigned = new File(fileNameSigned);
+
+                //Upload to Core
+                coreRestClient.handleFileUpload2(fileSigned);
 
                 Date ara = new Date();
                 Solicitud solicitudConvalidacio = solicitudService.getSolicitudConvalidacioById(Long.valueOf(idsolicitud));
