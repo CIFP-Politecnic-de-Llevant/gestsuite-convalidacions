@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf;
-
 /*
  * Copyright 2017 The Apache Software Foundation.
  *
@@ -16,12 +14,39 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf;
  * limitations under the License.
  */
 
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.cert.CertificateVerificationException;
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.cert.CertificateVerifier;
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.util.ConnectedInputStream;
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+
+import cat.politecnicllevant.convalidacions.pdf.service.pdfbox.cert.CertificateVerificationException;
+import cat.politecnicllevant.convalidacions.pdf.service.pdfbox.cert.CertificateVerifier;
+import cat.politecnicllevant.convalidacions.pdf.service.pdfbox.util.ConnectedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObjectKey;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.SecurityProvider;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
@@ -42,21 +67,9 @@ import org.bouncycastle.tsp.TSPException;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.bouncycastle.util.Store;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509Certificate;
-import java.util.*;
-
 /**
  * Utility class for the signature / timestamp examples.
- *
+ * 
  * @author Tilman Hausherr
  */
 public class SigUtils
@@ -148,11 +161,13 @@ public class SigUtils
         COSDictionary sigDict = signature.getCOSObject();
 
         // DocMDP specific stuff
+        // all values in the signature dictionary shall be direct objects
         COSDictionary transformParameters = new COSDictionary();
         transformParameters.setItem(COSName.TYPE, COSName.TRANSFORM_PARAMS);
         transformParameters.setInt(COSName.P, accessPermissions);
         transformParameters.setName(COSName.V, "1.2");
         transformParameters.setNeedToBeUpdated(true);
+        transformParameters.setDirect(true);
 
         COSDictionary referenceDict = new COSDictionary();
         referenceDict.setItem(COSName.TYPE, COSName.SIG_REF);
@@ -160,11 +175,13 @@ public class SigUtils
         referenceDict.setItem(COSName.DIGEST_METHOD, COSName.getPDFName("SHA1"));
         referenceDict.setItem(COSName.TRANSFORM_PARAMS, transformParameters);
         referenceDict.setNeedToBeUpdated(true);
+        referenceDict.setDirect(true);
 
         COSArray referenceArray = new COSArray();
         referenceArray.add(referenceDict);
         sigDict.setItem(COSName.REFERENCE, referenceArray);
         referenceArray.setNeedToBeUpdated(true);
+        referenceArray.setDirect(true);
 
         // Catalog
         COSDictionary catalogDict = doc.getDocumentCatalog().getCOSObject();
@@ -179,7 +196,7 @@ public class SigUtils
      * Log if the certificate is not valid for signature usage. Doing this
      * anyway results in Adobe Reader failing to validate the PDF.
      *
-     * @param x509Certificate
+     * @param x509Certificate 
      * @throws CertificateParsingException
      */
     public static void checkCertificateUsage(X509Certificate x509Certificate)
@@ -198,12 +215,12 @@ public class SigUtils
         }
         List<String> extendedKeyUsage = x509Certificate.getExtendedKeyUsage();
         if (extendedKeyUsage != null &&
-                !extendedKeyUsage.contains(KeyPurposeId.id_kp_emailProtection.toString()) &&
-                !extendedKeyUsage.contains(KeyPurposeId.id_kp_codeSigning.toString()) &&
-                !extendedKeyUsage.contains(KeyPurposeId.anyExtendedKeyUsage.toString()) &&
-                !extendedKeyUsage.contains("1.2.840.113583.1.1.5") &&
-                // not mentioned in Adobe document, but tolerated in practice
-                !extendedKeyUsage.contains("1.3.6.1.4.1.311.10.3.12"))
+            !extendedKeyUsage.contains(KeyPurposeId.id_kp_emailProtection.toString()) &&
+            !extendedKeyUsage.contains(KeyPurposeId.id_kp_codeSigning.toString()) &&
+            !extendedKeyUsage.contains(KeyPurposeId.anyExtendedKeyUsage.toString()) &&
+            !extendedKeyUsage.contains("1.2.840.113583.1.1.5") &&
+            // not mentioned in Adobe document, but tolerated in practice
+            !extendedKeyUsage.contains("1.3.6.1.4.1.311.10.3.12"))
         {
             LOG.error("Certificate extended key usage does not include " +
                     "emailProtection, nor codeSigning, nor anyExtendedKeyUsage, " +
@@ -214,7 +231,7 @@ public class SigUtils
     /**
      * Log if the certificate is not valid for timestamping.
      *
-     * @param x509Certificate
+     * @param x509Certificate 
      * @throws CertificateParsingException
      */
     public static void checkTimeStampCertificateUsage(X509Certificate x509Certificate)
@@ -223,7 +240,7 @@ public class SigUtils
         List<String> extendedKeyUsage = x509Certificate.getExtendedKeyUsage();
         // https://tools.ietf.org/html/rfc5280#section-4.2.1.12
         if (extendedKeyUsage != null &&
-                !extendedKeyUsage.contains(KeyPurposeId.id_kp_timeStamping.toString()))
+            !extendedKeyUsage.contains(KeyPurposeId.id_kp_timeStamping.toString()))
         {
             LOG.error("Certificate extended key usage does not include timeStamping");
         }
@@ -232,7 +249,7 @@ public class SigUtils
     /**
      * Log if the certificate is not valid for responding.
      *
-     * @param x509Certificate
+     * @param x509Certificate 
      * @throws CertificateParsingException
      */
     public static void checkResponderCertificateUsage(X509Certificate x509Certificate)
@@ -241,7 +258,7 @@ public class SigUtils
         List<String> extendedKeyUsage = x509Certificate.getExtendedKeyUsage();
         // https://tools.ietf.org/html/rfc5280#section-4.2.1.12
         if (extendedKeyUsage != null &&
-                !extendedKeyUsage.contains(KeyPurposeId.id_kp_OCSPSigning.toString()))
+            !extendedKeyUsage.contains(KeyPurposeId.id_kp_OCSPSigning.toString()))
         {
             LOG.error("Certificate extended key usage does not include OCSP responding");
         }
@@ -249,21 +266,22 @@ public class SigUtils
 
     /**
      * Gets the last relevant signature in the document, i.e. the one with the highest offset.
-     *
+     * 
      * @param document to get its last signature
      * @return last signature or null when none found
      */
-    public static PDSignature getLastRelevantSignature(PDDocument document) throws IOException {
+    public static PDSignature getLastRelevantSignature(PDDocument document)
+    {
         Comparator<PDSignature> comparatorByOffset =
                 Comparator.comparing(sig -> sig.getByteRange()[1]);
 
-        // we can't use getLastSignatureDictionary() because this will fail (see PDFBOX-3978)
+        // we can't use getLastSignatureDictionary() because this will fail (see PDFBOX-3978) 
         // if a signature is assigned to a pre-defined empty signature field that isn't the last.
         // we get the last in time by looking at the offset in the PDF file.
         Optional<PDSignature> optLastSignature =
                 document.getSignatureDictionaries().stream().
-                        sorted(comparatorByOffset.reversed()).
-                        findFirst();
+                sorted(comparatorByOffset.reversed()).
+                findFirst();
         if (optLastSignature.isPresent())
         {
             PDSignature lastSignature = optLastSignature.get();
@@ -304,7 +322,7 @@ public class SigUtils
         Collection<X509CertificateHolder> tstMatches =
                 timeStampToken.getCertificates().getMatches(timeStampToken.getSID());
         X509CertificateHolder certificateHolder = tstMatches.iterator().next();
-        SignerInformationVerifier siv =
+        SignerInformationVerifier siv = 
                 new JcaSimpleSignerInfoVerifierBuilder().setProvider(SecurityProvider.getProvider()).build(certificateHolder);
         timeStampToken.validate(siv);
     }
@@ -322,7 +340,7 @@ public class SigUtils
      * @throws CertificateException
      */
     public static void verifyCertificateChain(Store<X509CertificateHolder> certificatesStore,
-                                              X509Certificate certFromSignedData, Date signDate)
+            X509Certificate certFromSignedData, Date signDate)
             throws CertificateVerificationException, CertificateException
     {
         Collection<X509CertificateHolder> certificateHolders = certificatesStore.getMatches(null);
@@ -345,18 +363,19 @@ public class SigUtils
 
     /**
      * Get certificate of a TSA.
-     *
+     * 
      * @param tsaUrl URL
      * @return the X.509 certificate.
      *
      * @throws GeneralSecurityException
-     * @throws IOException
+     * @throws IOException 
+     * @throws URISyntaxException 
      */
     public static X509Certificate getTsaCertificate(String tsaUrl)
-            throws GeneralSecurityException, IOException
+            throws GeneralSecurityException, IOException, URISyntaxException
     {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        TSAClient tsaClient = new TSAClient(new URL(tsaUrl), null, null, digest);
+        TSAClient tsaClient = new TSAClient(new URI(tsaUrl).toURL(), null, null, digest);
         InputStream emptyStream = new ByteArrayInputStream(new byte[0]);
         TimeStampToken timeStampToken = tsaClient.getTimeStampToken(emptyStream);
         return getCertificateFromTimeStampToken(timeStampToken);
@@ -366,7 +385,7 @@ public class SigUtils
      * Extract X.509 certificate from a timestamp
      * @param timeStampToken
      * @return the X.509 certificate.
-     * @throws CertificateException
+     * @throws CertificateException 
      */
     public static X509Certificate getCertificateFromTimeStampToken(TimeStampToken timeStampToken)
             throws CertificateException
@@ -396,7 +415,7 @@ public class SigUtils
                 while (n < key.getNumber())
                 {
                     LOG.warn("Object " + n + " missing, signature verification may fail in " +
-                            "Adobe Reader, see https://stackoverflow.com/questions/71267471/");
+                             "Adobe Reader, see https://stackoverflow.com/questions/71267471/");
                     ++n;
                 }
             }
@@ -408,11 +427,12 @@ public class SigUtils
      *
      * @param urlString
      * @return
-     * @throws IOException
+     * @throws IOException 
+     * @throws URISyntaxException 
      */
-    public static InputStream openURL(String urlString) throws IOException
+    public static InputStream openURL(String urlString) throws IOException, URISyntaxException
     {
-        URL url = new URL(urlString);
+        URL url = new URI(urlString).toURL();
         if (!urlString.startsWith("http"))
         {
             // so that ftp is still supported
@@ -422,19 +442,19 @@ public class SigUtils
         int responseCode = con.getResponseCode();
         LOG.info(responseCode + " " + con.getResponseMessage());
         if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
-                responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
-                responseCode == HttpURLConnection.HTTP_SEE_OTHER)
+            responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
+            responseCode == HttpURLConnection.HTTP_SEE_OTHER)
         {
             String location = con.getHeaderField("Location");
             if (urlString.startsWith("http://") &&
-                    location.startsWith("https://") &&
-                    urlString.substring(7).equals(location.substring(8)))
+                location.startsWith("https://") &&
+                urlString.substring(7).equals(location.substring(8)))
             {
                 // redirection from http:// to https://
                 // change this code if you want to be more flexible (but think about security!)
                 LOG.info("redirection to " + location + " followed");
                 con.disconnect();
-                con = (HttpURLConnection) new URL(location).openConnection();
+                con = (HttpURLConnection) new URI(location).toURL().openConnection();
             }
             else
             {

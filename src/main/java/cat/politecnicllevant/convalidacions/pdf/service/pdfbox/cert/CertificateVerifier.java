@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
@@ -19,12 +17,44 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
  * under the License.
  */
 
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox.cert;
 
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.SigUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.CertPathBuilder;
+import java.security.cert.CertPathBuilderException;
+import java.security.cert.CertStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CollectionCertStoreParameters;
+import java.security.cert.PKIXBuilderParameters;
+import java.security.cert.PKIXCertPathBuilderResult;
+import java.security.cert.TrustAnchor;
+import java.security.cert.X509CertSelector;
+import java.security.cert.X509Certificate;
+import java.security.cert.X509Extension;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+
+import cat.politecnicllevant.convalidacions.pdf.service.pdfbox.SigUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.pdmodel.encryption.SecurityProvider;
-import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
@@ -36,19 +66,10 @@ import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.OCSPException;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.PublicKey;
-import java.security.SignatureException;
-import java.security.cert.*;
-import java.util.*;
-
 /**
  * Copied from Apache CXF 2.4.9, initial version:
  * https://svn.apache.org/repos/asf/cxf/tags/cxf-2.4.9/distribution/src/main/release/samples/sts_issue_operation/src/main/java/demo/sts/provider/cert/
- *
+ * 
  */
 public final class CertificateVerifier
 {
@@ -163,17 +184,18 @@ public final class CertificateVerifier
         {
             throw new CertificateVerificationException(
                     "Error building certification path: "
-                            + cert.getSubjectX500Principal(), certPathEx);
+                    + cert.getSubjectX500Principal(), certPathEx);
         }
         catch (CertificateVerificationException cvex)
         {
             throw cvex;
         }
-        catch (IOException | GeneralSecurityException | RevokedCertificateException | OCSPException ex)
+        catch (IOException | URISyntaxException |
+               GeneralSecurityException | RevokedCertificateException | OCSPException ex)
         {
             throw new CertificateVerificationException(
                     "Error verifying the certificate: "
-                            + cert.getSubjectX500Principal(), ex);
+                    + cert.getSubjectX500Principal(), ex);
         }
     }
 
@@ -181,7 +203,7 @@ public final class CertificateVerifier
                                          Set<X509Certificate> additionalCerts,
                                          Date signDate)
             throws IOException, CertificateVerificationException, OCSPException,
-            RevokedCertificateException, GeneralSecurityException
+                   RevokedCertificateException, GeneralSecurityException, URISyntaxException
     {
         if (isSelfSigned(cert))
         {
@@ -200,13 +222,13 @@ public final class CertificateVerifier
             {
                 // not the issuer
             }
-        }
+        }        
     }
 
     private static void checkRevocationsWithIssuer(X509Certificate cert, X509Certificate issuerCert,
-                                                   Set<X509Certificate> additionalCerts, Date signDate)
+            Set<X509Certificate> additionalCerts, Date signDate)
             throws OCSPException, CertificateVerificationException, RevokedCertificateException,
-            GeneralSecurityException, IOException
+            GeneralSecurityException, IOException, URISyntaxException
     {
         // Try checking the certificate through OCSP (faster than CRL)
         String ocspURL = extractOCSPURL(cert);
@@ -308,7 +330,7 @@ public final class CertificateVerifier
                 continue;
             }
             ASN1TaggedObject location = (ASN1TaggedObject) obj.getObjectAt(1);
-            ASN1OctetString uri = (ASN1OctetString) location.getBaseObject();
+            ASN1OctetString uri = (ASN1OctetString) location.getObject();
             String urlString = new String(uri.getOctets());
             LOG.info("CA issuers URL: " + urlString);
             try (InputStream in = SigUtils.openURL(urlString))
@@ -318,7 +340,7 @@ public final class CertificateVerifier
                 altCerts.forEach(altCert -> resultSet.add((X509Certificate) altCert));
                 LOG.info("CA issuers URL: " + altCerts.size() + " certificate(s) downloaded");
             }
-            catch (IOException ex)
+            catch (IOException | URISyntaxException ex)
             {
                 LOG.warn(urlString + " failure: " + ex.getMessage(), ex);
             }
@@ -392,7 +414,7 @@ public final class CertificateVerifier
      *
      * @param cert X.509 certificate
      * @return the URL of the OCSP validation service
-     * @throws IOException
+     * @throws IOException 
      */
     private static String extractOCSPURL(X509Certificate cert) throws IOException
     {
@@ -413,7 +435,7 @@ public final class CertificateVerifier
                 if (X509ObjectIdentifiers.id_ad_ocsp.equals(oid)
                         && location.getTagNo() == GeneralName.uniformResourceIdentifier)
                 {
-                    ASN1OctetString url = (ASN1OctetString) location.getBaseObject();
+                    ASN1OctetString url = (ASN1OctetString) location.getObject();
                     String ocspURL = new String(url.getOctets());
                     LOG.info("OCSP URL: " + ocspURL);
                     return ocspURL;
@@ -431,11 +453,13 @@ public final class CertificateVerifier
      * @param additionalCerts
      * @throws RevokedCertificateException
      * @throws IOException
+     * @throws URISyntaxException
      * @throws OCSPException
      * @throws CertificateVerificationException
      */
     private static void verifyOCSP(OcspHelper ocspHelper, Set<X509Certificate> additionalCerts)
-            throws RevokedCertificateException, IOException, OCSPException, CertificateVerificationException
+            throws RevokedCertificateException, IOException, OCSPException,
+            CertificateVerificationException, URISyntaxException
     {
         Date now = Calendar.getInstance().getTime();
         OCSPResp ocspResponse;

@@ -1,4 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf;
 /*
  * Copyright 2015 The Apache Software Foundation.
  *
@@ -15,6 +14,22 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf;
  * limitations under the License.
  */
 
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Enumeration;
 
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
@@ -26,15 +41,6 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.*;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Enumeration;
 
 public abstract class CreateSignatureBase implements SignatureInterface
 {
@@ -144,7 +150,7 @@ public abstract class CreateSignatureBase implements SignatureInterface
             }
             return signedData.getEncoded();
         }
-        catch (GeneralSecurityException | CMSException | OperatorCreationException e)
+        catch (GeneralSecurityException | CMSException | OperatorCreationException | URISyntaxException e)
         {
             throw new IOException(e);
         }

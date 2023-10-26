@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,18 +14,28 @@ package cat.politecnicllevant.convalidacions.pdf.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox;
 
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.CreateSignatureBase;
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.SigUtils;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.util.Calendar;
+
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.ExternalSigningSupport;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
-
-import java.io.*;
-import java.security.*;
-import java.security.cert.CertificateException;
-import java.util.Calendar;
 
 /**
  * An example for signing a PDF with bouncy castle.
@@ -94,12 +102,12 @@ public class CreateSignature extends CreateSignatureBase
         {
             throw new FileNotFoundException("Document for signing does not exist");
         }
-
+        
         setTsaUrl(tsaUrl);
 
         // sign
         try (FileOutputStream fos = new FileOutputStream(outFile);
-             PDDocument doc = PDDocument.load(inFile))
+                PDDocument doc = Loader.loadPDF(inFile))
         {
             signDetached(doc, fos);
         }
@@ -116,7 +124,7 @@ public class CreateSignature extends CreateSignatureBase
         if (accessPermissions == 1)
         {
             throw new IllegalStateException("No changes to the document are permitted due to DocMDP transform parameters dictionary");
-        }
+        }     
 
         // create signature dictionary
         PDSignature signature = new PDSignature();
@@ -130,11 +138,11 @@ public class CreateSignature extends CreateSignatureBase
         // the signing date, needed for valid signature
         signature.setSignDate(Calendar.getInstance());
 
-        // Optional: certify
+        // Optional: certify 
         if (accessPermissions == 0)
         {
             SigUtils.setMDPPermission(document, signature, 2);
-        }
+        }        
 
         if (isExternalSigning())
         {
@@ -159,7 +167,7 @@ public class CreateSignature extends CreateSignatureBase
         }
     }
 
-    public static void signDocument(String[] args) throws IOException, GeneralSecurityException
+    public static void main(String[] args) throws IOException, GeneralSecurityException
     {
         if (args.length < 3)
         {
@@ -189,11 +197,12 @@ public class CreateSignature extends CreateSignatureBase
 
         // load the keystore
         KeyStore keystore = KeyStore.getInstance("PKCS12");
-        char[] password = args[1].toCharArray();
+        char[] password = args[1].toCharArray(); // TODO use Java 6 java.io.Console.readPassword
         try (InputStream is = new FileInputStream(args[0]))
         {
             keystore.load(is, password);
         }
+        // TODO alias command line argument
 
         // sign PDF
         CreateSignature signing = new CreateSignature(keystore, password);
@@ -210,9 +219,9 @@ public class CreateSignature extends CreateSignatureBase
     private static void usage()
     {
         System.err.println("usage: java " + CreateSignature.class.getName() + " " +
-                "<pkcs12_keystore> <password> <pdf_to_sign>\n" + "" +
-                "options:\n" +
-                "  -tsa <url>    sign timestamp using the given TSA server\n" +
-                "  -e            sign using external signature creation scenario");
+                           "<pkcs12_keystore> <password> <pdf_to_sign>\n" + "" +
+                           "options:\n" +
+                           "  -tsa <url>    sign timestamp using the given TSA server\n" +
+                           "  -e            sign using external signature creation scenario");
     }
 }

@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
@@ -19,16 +17,25 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
  * under the License.
  */
 
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.SigUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.pdmodel.encryption.SecurityProvider;
-import org.bouncycastle.asn1.ASN1IA5String;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1OctetString;
-import org.bouncycastle.asn1.ASN1Primitive;
-import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.*;
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox.cert;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.cert.CRLException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509CRL;
+import java.security.cert.X509CRLEntry;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -36,17 +43,28 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.GeneralSecurityException;
-import java.security.cert.*;
-import java.util.*;
+
+import cat.politecnicllevant.convalidacions.pdf.service.pdfbox.SigUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.apache.pdfbox.pdmodel.encryption.SecurityProvider;
+
+import org.bouncycastle.asn1.ASN1IA5String;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.x509.CRLDistPoint;
+import org.bouncycastle.asn1.x509.DistributionPoint;
+import org.bouncycastle.asn1.x509.DistributionPointName;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
 
 /**
  * Copied from Apache CXF 2.4.9, initial version:
  * https://svn.apache.org/repos/asf/cxf/tags/cxf-2.4.9/distribution/src/main/release/samples/sts_issue_operation/src/main/java/demo/sts/provider/cert/
- *
+ * 
  */
 public final class CRLVerifier
 {
@@ -71,7 +89,7 @@ public final class CRLVerifier
      */
     @SuppressWarnings({"squid:S1141"}) // nested exception needed to try several distribution points
     public static void verifyCertificateCRLs(X509Certificate cert, Date signDate,
-                                             Set<X509Certificate> additionalCerts)
+            Set<X509Certificate> additionalCerts)
             throws CertificateVerificationException, RevokedCertificateException
     {
         try
@@ -124,8 +142,8 @@ public final class CRLVerifier
                 {
                     throw new CertificateVerificationException(
                             "Certificate for " + crl.getIssuerX500Principal() +
-                                    "not found in certificate chain, so the CRL at " +
-                                    crlDistributionPointsURL + " could not be verified");
+                            "not found in certificate chain, so the CRL at " +
+                            crlDistributionPointsURL + " could not be verified");
                 }
                 crl.verify(crlIssuerCert.getPublicKey(), SecurityProvider.getProvider());
                 //TODO these should be exceptions, but for that we need a test case where
@@ -174,7 +192,7 @@ public final class CRLVerifier
         {
             throw new CertificateVerificationException(
                     "Cannot verify CRL for certificate: "
-                            + cert.getSubjectX500Principal(), ex);
+                    + cert.getSubjectX500Principal(), ex);
 
         }
     }
@@ -189,8 +207,8 @@ public final class CRLVerifier
      * @throws RevokedCertificateException if the certificate was revoked at signing time
      */
     public static void checkRevocation(
-            X509CRL crl, X509Certificate cert, Date signDate, String crlDistributionPointsURL)
-            throws RevokedCertificateException
+        X509CRL crl, X509Certificate cert, Date signDate, String crlDistributionPointsURL)
+                throws RevokedCertificateException
     {
         X509CRLEntry revokedCRLEntry = crl.getRevokedCertificate(cert);
         if (revokedCRLEntry != null &&
@@ -217,7 +235,7 @@ public final class CRLVerifier
      */
     private static X509CRL downloadCRL(String crlURL) throws IOException,
             CertificateException, CRLException,
-            CertificateVerificationException, NamingException
+            CertificateVerificationException, NamingException, URISyntaxException
     {
         if (crlURL.startsWith("http://") || crlURL.startsWith("https://")
                 || crlURL.startsWith("ftp://"))
@@ -232,7 +250,7 @@ public final class CRLVerifier
         {
             throw new CertificateVerificationException(
                     "Can not download CRL from certificate "
-                            + "distribution point: " + crlURL);
+                    + "distribution point: " + crlURL);
         }
     }
 
@@ -274,7 +292,7 @@ public final class CRLVerifier
      * http://crl.infonotary.com/crl/identity-ca.crl
      */
     public static X509CRL downloadCRLFromWeb(String crlURL)
-            throws IOException, CertificateException, CRLException
+            throws IOException, CertificateException, CRLException, URISyntaxException
     {
         try (InputStream crlStream = SigUtils.openURL(crlURL))
         {

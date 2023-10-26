@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,8 +14,31 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox.cert;
 
-import cat.politecnicllevant.convalidacions.pdf.service.pdf.SigUtils;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Random;
+import java.util.Set;
+
+import cat.politecnicllevant.convalidacions.pdf.service.pdfbox.SigUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.pdmodel.encryption.SecurityProvider;
@@ -35,31 +56,23 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
-import org.bouncycastle.cert.ocsp.*;
+import org.bouncycastle.cert.ocsp.BasicOCSPResp;
+import org.bouncycastle.cert.ocsp.CertificateID;
+import org.bouncycastle.cert.ocsp.CertificateStatus;
+import org.bouncycastle.cert.ocsp.OCSPException;
+import org.bouncycastle.cert.ocsp.OCSPReq;
+import org.bouncycastle.cert.ocsp.OCSPReqBuilder;
+import org.bouncycastle.cert.ocsp.OCSPResp;
+import org.bouncycastle.cert.ocsp.RevokedStatus;
+import org.bouncycastle.cert.ocsp.SingleResp;
 import org.bouncycastle.operator.ContentVerifierProvider;
 import org.bouncycastle.operator.DigestCalculator;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509Certificate;
-import java.util.*;
-
 /**
  * Helper Class for OCSP-Operations with bouncy castle.
- *
+ * 
  * @author Alexis Suter
  */
 public class OcspHelper
@@ -74,7 +87,7 @@ public class OcspHelper
     private DEROctetString encodedNonce;
     private X509Certificate ocspResponderCertificate;
     private final JcaX509CertificateConverter certificateConverter = new JcaX509CertificateConverter();
-
+    
     // SecureRandom.getInstanceStrong() would be better, but sometimes blocks on Linux
     private static final Random RANDOM = new SecureRandom();
 
@@ -89,7 +102,7 @@ public class OcspHelper
      * @param ocspUrl where to fetch for OCSP
      */
     public OcspHelper(X509Certificate checkCertificate, Date signDate, X509Certificate issuerCertificate,
-                      Set<X509Certificate> additionalCerts, String ocspUrl)
+            Set<X509Certificate> additionalCerts, String ocspUrl)
     {
         this.certificateToCheck = checkCertificate;
         this.signDate = signDate;
@@ -100,7 +113,7 @@ public class OcspHelper
 
     /**
      * Get the certificate to be OCSP-checked.
-     *
+     * 
      * @return The certificate to be OCSP-checked.
      */
     X509Certificate getCertificateToCheck()
@@ -117,8 +130,10 @@ public class OcspHelper
      * @throws IOException
      * @throws OCSPException
      * @throws RevokedCertificateException
+     * @throws URISyntaxException
      */
-    public OCSPResp getResponseOcsp() throws IOException, OCSPException, RevokedCertificateException
+    public OCSPResp getResponseOcsp()
+            throws IOException, OCSPException, RevokedCertificateException, URISyntaxException
     {
         OCSPResp ocspResponse = performRequest(ocspUrl);
         verifyOcspResponse(ocspResponse);
@@ -138,7 +153,7 @@ public class OcspHelper
 
     /**
      * Verifies the status and the response itself (including nonce), but not the signature.
-     *
+     * 
      * @param ocspResponse to be verified
      * @throws OCSPException
      * @throws RevokedCertificateException
@@ -221,12 +236,12 @@ public class OcspHelper
                 if (revokedStatus.getRevocationTime().compareTo(signDate) <= 0)
                 {
                     throw new RevokedCertificateException(
-                            "OCSP: Certificate is revoked since " +
-                                    revokedStatus.getRevocationTime(),
-                            revokedStatus.getRevocationTime());
+                        "OCSP: Certificate is revoked since " +
+                                revokedStatus.getRevocationTime(),
+                                revokedStatus.getRevocationTime());
                 }
-                LOG.info("The certificate was revoked after signing by OCSP " + ocspUrl +
-                        " on " + revokedStatus.getRevocationTime());
+                LOG.info("The certificate was revoked after signing by OCSP " + ocspUrl + 
+                         " on " + revokedStatus.getRevocationTime());
             }
             else if (status != CertificateStatus.GOOD)
             {
@@ -377,7 +392,7 @@ public class OcspHelper
 
     /**
      * Checks whether the OCSP response is signed by the given certificate.
-     *
+     * 
      * @param certificate the certificate to check the signature
      * @param basicResponse OCSP response containing the signature
      * @throws OCSPException when the signature is invalid or could not be checked
@@ -404,7 +419,7 @@ public class OcspHelper
 
     /**
      * Checks if the nonce in the response matches.
-     *
+     * 
      * @param basicResponse Response to be checked
      * @return true if the nonce is present and matches, false if nonce is missing.
      * @throws OCSPException if the nonce is different
@@ -440,11 +455,13 @@ public class OcspHelper
      * @return the OCSPResp, that has been fetched from the ocspUrl
      * @throws IOException
      * @throws OCSPException
+     * @throws URISyntaxException
      */
-    private OCSPResp performRequest(String urlString) throws IOException, OCSPException
+    private OCSPResp performRequest(String urlString)
+            throws IOException, OCSPException, URISyntaxException
     {
         OCSPReq request = generateOCSPRequest();
-        URL url = new URL(urlString);
+        URL url = new URI(urlString).toURL();
         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
         try
         {
@@ -459,13 +476,13 @@ public class OcspHelper
 
             int responseCode = httpConnection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
-                    responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
-                    responseCode == HttpURLConnection.HTTP_SEE_OTHER)
+                responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
+                responseCode == HttpURLConnection.HTTP_SEE_OTHER)
             {
                 String location = httpConnection.getHeaderField("Location");
                 if (urlString.startsWith("http://") &&
-                        location.startsWith("https://") &&
-                        urlString.substring(7).equals(location.substring(8)))
+                    location.startsWith("https://") &&
+                    urlString.substring(7).equals(location.substring(8)))
                 {
                     // redirection from http:// to https://
                     // change this code if you want to be more flexible (but think about security!)
@@ -497,7 +514,7 @@ public class OcspHelper
 
     /**
      * Helper method to verify response status.
-     *
+     * 
      * @param resp OCSP response
      * @throws OCSPException if the response status is not ok
      */
@@ -509,33 +526,33 @@ public class OcspHelper
             int status = resp.getStatus();
             switch (status)
             {
-                case OCSPResponseStatus.INTERNAL_ERROR:
-                    statusInfo = "INTERNAL_ERROR";
-                    LOG.error("An internal error occurred in the OCSP Server!");
-                    break;
-                case OCSPResponseStatus.MALFORMED_REQUEST:
-                    // This happened when the "critical" flag was used for extensions
-                    // on a responder known by the committer of this comment.
-                    statusInfo = "MALFORMED_REQUEST";
-                    LOG.error("Your request did not fit the RFC 2560 syntax!");
-                    break;
-                case OCSPResponseStatus.SIG_REQUIRED:
-                    statusInfo = "SIG_REQUIRED";
-                    LOG.error("Your request was not signed!");
-                    break;
-                case OCSPResponseStatus.TRY_LATER:
-                    statusInfo = "TRY_LATER";
-                    LOG.error("The server was too busy to answer you!");
-                    break;
-                case OCSPResponseStatus.UNAUTHORIZED:
-                    statusInfo = "UNAUTHORIZED";
-                    LOG.error("The server could not authenticate you!");
-                    break;
-                case OCSPResponseStatus.SUCCESSFUL:
-                    break;
-                default:
-                    statusInfo = "UNKNOWN";
-                    LOG.error("Unknown OCSPResponse status code! " + status);
+            case OCSPResponseStatus.INTERNAL_ERROR:
+                statusInfo = "INTERNAL_ERROR";
+                LOG.error("An internal error occurred in the OCSP Server!");
+                break;
+            case OCSPResponseStatus.MALFORMED_REQUEST:
+                // This happened when the "critical" flag was used for extensions
+                // on a responder known by the committer of this comment.
+                statusInfo = "MALFORMED_REQUEST";
+                LOG.error("Your request did not fit the RFC 2560 syntax!");
+                break;
+            case OCSPResponseStatus.SIG_REQUIRED:
+                statusInfo = "SIG_REQUIRED";
+                LOG.error("Your request was not signed!");
+                break;
+            case OCSPResponseStatus.TRY_LATER:
+                statusInfo = "TRY_LATER";
+                LOG.error("The server was too busy to answer you!");
+                break;
+            case OCSPResponseStatus.UNAUTHORIZED:
+                statusInfo = "UNAUTHORIZED";
+                LOG.error("The server could not authenticate you!");
+                break;
+            case OCSPResponseStatus.SUCCESSFUL:
+                break;
+            default:
+                statusInfo = "UNKNOWN";
+                LOG.error("Unknown OCSPResponse status code! " + status);
             }
         }
         if (resp == null || resp.getStatus() != OCSPResponseStatus.SUCCESSFUL)

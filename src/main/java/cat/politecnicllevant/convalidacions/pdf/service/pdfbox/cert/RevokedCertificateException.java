@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,18 +14,19 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf.cert;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox.cert;
 
 import java.util.Date;
 
 /**
  * Exception to handle a revoked Certificate explicitly
- *
+ * 
  * @author Alexis Suter
  */
 public class RevokedCertificateException extends Exception
 {
     private static final long serialVersionUID = 3543946618794126654L;
-
+    
     private final Date revocationTime;
 
     public RevokedCertificateException(String message)

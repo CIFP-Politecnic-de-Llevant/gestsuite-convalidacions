@@ -4,6 +4,8 @@ import cat.politecnicllevant.convalidacions.config.FeignSupportConfig;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
+import feign.Headers;
+import feign.RequestLine;
 import feign.form.spring.SpringFormEncoder;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-@FeignClient(name = "core", configuration = FeignSupportConfig.class)
+@FeignClient(name = "core")
 public interface CoreRestClient {
 
     //USUARIS
@@ -44,9 +46,6 @@ public interface CoreRestClient {
 
     @PostMapping("/public/fitxerbucket/uploadlocal")
     ResponseEntity<String> handleFileUpload(@RequestPart(value = "file") final MultipartFile uploadfile) throws IOException;
-
-    @PostMapping(value = "/public/fitxerbucket/uploadlocal2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<String> handleFileUpload2(@RequestPart(value = "file") final File uploadfile) throws IOException;
 
     //GOOGLE STORAGE
     @PostMapping(value = "/googlestorage/generate-signed-url")

@@ -19,16 +19,27 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -38,16 +49,22 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.bouncycastle.asn1.cms.CMSAttributes.contentType;
 
 @RestController
 public class SolicitudController {
@@ -577,13 +594,45 @@ public class SolicitudController {
                     .lines()
                     .collect(Collectors.joining("\n"));
 
+            //SIGNAR
+            System.out.println("Signing file 7: "+fSignatura.getAbsolutePath()+"---"+password+"---"+f.getAbsolutePath());
             boolean signed = pdfService.signDocument(fSignatura.getAbsolutePath(),password,f.getAbsolutePath());
             if(signed){
+                System.out.println("File signed, uploading to Core and Google Cloud Storage");
+
                 String fileNameSigned = "/tmp/arxiu_signed.pdf";
                 File fileSigned = new File(fileNameSigned);
 
-                //Upload to Core
-                coreRestClient.handleFileUpload2(fileSigned);
+                String remotePath = "";
+                String boundary = "---------------"+UUID.randomUUID().toString();
+
+                final HttpPost httpPost = new HttpPost("https://e2b2-213-94-41-199.ngrok-free.app/api/core/public/fitxerbucket/uploadlocal");
+
+                final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                builder.addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf");
+
+                final HttpEntity multipart = builder.build();
+                httpPost.setEntity(multipart);
+
+
+                try(CloseableHttpClient client = HttpClientBuilder.create().build()) {
+                    remotePath = client.execute(httpPost, response -> {
+                        //do something with response
+                        System.out.println("Response de cridada...");
+                        System.out.println(response.getStatusLine().getStatusCode());
+                        System.out.println(response.getStatusLine().getReasonPhrase());
+                        InputStream responseInputStream = response.getEntity().getContent();
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(responseInputStream));
+                        String line = "";
+                        String out = "";
+                        while ((line = bufferedReader.readLine()) != null) {
+                            out += line;
+                        }
+                        return out;
+                    });
+                }
+                System.out.println("Remote path"+remotePath);
+
 
                 Date ara = new Date();
                 Solicitud solicitudConvalidacio = solicitudService.getSolicitudConvalidacioById(Long.valueOf(idsolicitud));
@@ -591,7 +640,7 @@ public class SolicitudController {
                 ResponseEntity<UsuariDto> alumneResponse = coreRestClient.getProfile(solicitudConvalidacio.getAlumne().toString());
                 UsuariDto alumne = alumneResponse.getBody();
 
-                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(this.bucketPathFiles+"/"+alumne.getGestibExpedient()+"/convalidacio_"+ara.getTime()+".pdf",fileNameSigned,bucketName);
+                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(this.bucketPathFiles+"/"+alumne.getGestibExpedient()+"/convalidacio_"+ara.getTime()+".pdf",remotePath,bucketName);
                 FitxerBucketDto fitxerBucket = fitxerBucketResponse.getBody();
 
                 ResponseEntity<FitxerBucketDto> fitxerBucketSavedResponse = coreRestClient.save(fitxerBucket);

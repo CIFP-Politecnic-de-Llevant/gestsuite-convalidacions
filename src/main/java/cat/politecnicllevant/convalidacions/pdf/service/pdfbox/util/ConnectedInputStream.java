@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf.util;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,6 +14,7 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf.util;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox.util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,5 +89,5 @@ public class ConnectedInputStream extends InputStream
     {
         is.close();
         con.disconnect();
-    }
+    }    
 }

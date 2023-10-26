@@ -1,5 +1,3 @@
-package cat.politecnicllevant.convalidacions.pdf.service.pdf;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,14 +14,7 @@ package cat.politecnicllevant.convalidacions.pdf.service.pdf;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.io.IOUtils;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
-import org.bouncycastle.operator.DigestAlgorithmIdentifierFinder;
-import org.bouncycastle.tsp.*;
+package cat.politecnicllevant.convalidacions.pdf.service.pdfbox;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +28,18 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Random;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.io.IOUtils;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.DigestAlgorithmIdentifierFinder;
+import org.bouncycastle.tsp.TSPException;
+import org.bouncycastle.tsp.TimeStampRequest;
+import org.bouncycastle.tsp.TimeStampRequestGenerator;
+import org.bouncycastle.tsp.TimeStampResponse;
+import org.bouncycastle.tsp.TimeStampToken;
 
 /**
  * Time Stamping Authority (TSA) Client [RFC 3161].
@@ -146,7 +149,7 @@ public class TSAClient
             {
                 contentEncoding = StandardCharsets.UTF_8.name();
             }
-            connection.setRequestProperty("Authorization",
+            connection.setRequestProperty("Authorization", 
                     "Basic " + new String(Base64.getEncoder().encode((username + ":" + password).
                             getBytes(contentEncoding))));
         }
