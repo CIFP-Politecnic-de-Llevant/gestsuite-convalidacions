@@ -669,14 +669,14 @@ public class SolicitudController {
                 body += "<br><br>";
                 body += "Des de Politècnic de Llevant us fem arribar la <strong>resolució</strong> de la convalidació sol·licitada a l'IES Manacor.";
 
-                coreRestClient.sendEmail(alumne.getGsuiteEmail(),"Resolució de convalidació",body,fileSigned);
+                coreRestClient.sendEmailAttachmentPath(alumne.getGsuiteEmail(),"Resolució de convalidació",body,remotePath);
 
                 body = "Còpia del missatge enviat a "+nomAlumne+": <br><br>" + body;
 
                 String[] emailsResolucio = this.notificarResolucionsEmails.split(",");
 
                 for(String email: emailsResolucio){
-                    coreRestClient.sendEmail(email,"Resolució de convalidació",body,fileSigned);
+                    coreRestClient.sendEmailAttachmentPath(email,"Resolució de convalidació",body,remotePath);
                 }
 
                 //Notifiguem als tutors
@@ -712,7 +712,7 @@ public class SolicitudController {
 
                     //Enviem el correu al/s tutor/s
                     for(UsuariDto tutor: tutors){
-                        coreRestClient.sendEmail(tutor.getGsuiteEmail(),"Resolució de convalidació",body,fileSigned);
+                        coreRestClient.sendEmailAttachmentPath(tutor.getGsuiteEmail(),"Resolució de convalidació",body,remotePath);
                     }
                 }
 

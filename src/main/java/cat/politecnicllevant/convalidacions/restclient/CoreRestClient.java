@@ -58,8 +58,8 @@ public interface CoreRestClient {
     void deleteObject(@RequestParam("objectName") String objectName, @RequestParam("bucket") String bucket) throws IOException, GeneralSecurityException;
 
     //GMAIL
-    @PostMapping(value="/gsuite/sendemailattachment")
-    void sendEmail(@RequestParam("to") String to, @RequestParam("assumpte") String assumpte, @RequestParam("body") String bodyHTML, @RequestParam File file) throws IOException, MessagingException, GeneralSecurityException;
+    @PostMapping(value="/gsuite/sendemailattachment-path")
+    void sendEmailAttachmentPath(@RequestParam("to") String to, @RequestParam("assumpte") String assumpte, @RequestParam("body") String bodyHTML, @RequestParam("path") String filepath) throws IOException, MessagingException, GeneralSecurityException;
 
     //GRUP
     @GetMapping("/grup/getById/{idgrup}")
