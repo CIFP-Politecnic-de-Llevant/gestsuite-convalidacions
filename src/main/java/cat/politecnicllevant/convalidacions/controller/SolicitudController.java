@@ -105,6 +105,8 @@ public class SolicitudController {
     @Value("${centre.convalidacions.notificar-resolucions}")
     private String notificarResolucionsEmails;
 
+    @Value("${microservice.core.address}")
+    private String coreAddress;
 
 
 
@@ -606,7 +608,7 @@ public class SolicitudController {
                 String remotePath = "";
                 String boundary = "---------------"+UUID.randomUUID().toString();
 
-                final HttpPost httpPost = new HttpPost("https://e2b2-213-94-41-199.ngrok-free.app/api/core/public/fitxerbucket/uploadlocal");
+                final HttpPost httpPost = new HttpPost(this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal");
 
                 final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
                 builder.addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf");
