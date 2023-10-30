@@ -601,7 +601,7 @@ public class SolicitudController {
             System.setProperty("javax.net.ssl.trustStorePassword",password);
 
             //SIGNAR
-            System.out.println("Signing file 7: "+fSignatura.getAbsolutePath()+"---"+password+"---"+f.getAbsolutePath());
+            System.out.println("Signing file 8: "+fSignatura.getAbsolutePath()+"---"+password+"---"+f.getAbsolutePath());
             boolean signed = pdfService.signDocument(fSignatura.getAbsolutePath(),password,f.getAbsolutePath());
             if(signed){
                 System.out.println("File signed, uploading to Core and Google Cloud Storage");
