@@ -602,6 +602,10 @@ public class SolicitudController {
             if(signed){
                 System.out.println("File signed, uploading to Core and Google Cloud Storage");
 
+                //Configurem JAVA perquè accepti els certificats
+                System.setProperty("javax.net.ssl.trustStore","/tmp/signatura.p12");
+                System.setProperty("javax.net.ssl.trustStorePassword",password);
+
                 String fileNameSigned = "/tmp/arxiu_signed.pdf";
                 File fileSigned = new File(fileNameSigned);
 
