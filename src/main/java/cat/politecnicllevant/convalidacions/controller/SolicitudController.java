@@ -36,6 +36,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -44,6 +45,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -673,24 +675,24 @@ public class SolicitudController {
                 final SSLContext sslContext = SSLContexts.custom()
                         .loadTrustMaterial(null, acceptingTrustStrategy)
                         .build();
-                final SSLConnectionSocketFactory sslsf =
-                        new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+                final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
                 final Registry<ConnectionSocketFactory> socketFactoryRegistry =
                         RegistryBuilder.<ConnectionSocketFactory> create()
                                 .register("https", sslsf)
                                 .register("http", new PlainConnectionSocketFactory())
                                 .build();
 
-                final BasicHttpClientConnectionManager connectionManager =
-                        new BasicHttpClientConnectionManager(socketFactoryRegistry);
+                final BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(socketFactoryRegistry);
 
+                //Upload multipart
                 try( CloseableHttpClient httpClient = HttpClients.custom()
-                        .setConnectionManager(connectionManager)
+                        .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build())
+                        .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
                         .build()){
 
                          remotePath = httpClient.execute(httpPost, response -> {
                         //do something with response
-                        System.out.println("Response de cridada 3...");
+                        System.out.println("Response de cridada 4...");
                         System.out.println(response.getStatusLine().getStatusCode());
                         System.out.println(response.getStatusLine().getReasonPhrase());
                         InputStream responseInputStream = response.getEntity().getContent();
@@ -700,6 +702,7 @@ public class SolicitudController {
                         while ((line = bufferedReader.readLine()) != null) {
                             out += line;
                         }
+                        System.out.println("finalitzada cridada 4...");
                         return out;
                      });
                 }
