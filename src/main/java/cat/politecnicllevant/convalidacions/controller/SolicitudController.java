@@ -614,8 +614,8 @@ public class SolicitudController {
                     .collect(Collectors.joining("\n"));
 
             //Configurem JAVA perquè accepti els certificats
-            System.setProperty("javax.net.ssl.trustStore","/tmp/signatura.p12");
-            System.setProperty("javax.net.ssl.trustStorePassword",password);
+            //System.setProperty("javax.net.ssl.trustStore","/tmp/signatura.p12");
+            //System.setProperty("javax.net.ssl.trustStorePassword",password);
 
             //SIGNAR
             System.out.println("Signing file 9: "+fSignatura.getAbsolutePath()+"---"+password+"---"+f.getAbsolutePath());
@@ -629,14 +629,32 @@ public class SolicitudController {
                 String remotePath = "";
                 String boundary = "---------------"+UUID.randomUUID().toString();
 
-                final HttpPost httpPost = new HttpPost(this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal");
+                //MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                //body.add("file", new File("/tmp/arxiu_signed.pdf"));
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+                //HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+                final HttpEntity requestEntity = MultipartEntityBuilder.create()
+                        .setBoundary(boundary)
+                        .addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf")
+                        .build();
+
+                String serverUrl = this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal";
+
+                RestTemplate restTemplate = new RestTemplate();
+                ResponseEntity<String> response = restTemplate.postForEntity(serverUrl, requestEntity, String.class);
+                remotePath = response.getBody();
+
+                /*final HttpPost httpPost = new HttpPost(this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal");
 
                 final HttpEntity httpEntity = MultipartEntityBuilder.create()
                         .addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf")
                         .build();
 
                 httpPost.setEntity(httpEntity);
-                httpPost.setHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
+                httpPost.setHeader("Content-Type", "multipart/form-data; boundary=" + boundary);*/
 
 
                 //try(CloseableHttpClient client = HttpClientBuilder.create()
@@ -672,6 +690,7 @@ public class SolicitudController {
 
                 //final HttpGet getMethod = new HttpGet(HOST_WITH_SSL);
 
+                /*
                 final TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
                 final SSLContext sslContext = SSLContexts.custom()
                         .loadTrustMaterial(null, acceptingTrustStrategy)
@@ -707,10 +726,12 @@ public class SolicitudController {
                         return out;
                      });
                 }
-
+ */
                 System.out.println("pre remote path");
                 System.out.println("Remote path"+remotePath);
                 System.out.println("fi remote path");
+
+
 
                 Date ara = new Date();
                 Solicitud solicitudConvalidacio = solicitudService.getSolicitudConvalidacioById(Long.valueOf(idsolicitud));
