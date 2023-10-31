@@ -631,11 +631,12 @@ public class SolicitudController {
 
                 final HttpPost httpPost = new HttpPost(this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal");
 
-                final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-                builder.addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf");
+                final HttpEntity httpEntity = MultipartEntityBuilder.create()
+                        .addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf")
+                        .build();
 
-                final HttpEntity multipart = builder.build();
-                httpPost.setEntity(multipart);
+                httpPost.setEntity(httpEntity);
+                httpPost.setHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
 
 
                 //try(CloseableHttpClient client = HttpClientBuilder.create()
@@ -692,7 +693,7 @@ public class SolicitudController {
 
                          remotePath = httpClient.execute(httpPost, response -> {
                         //do something with response
-                        System.out.println("Response de cridada 4...");
+                        System.out.println("Response de cridada 6...");
                         System.out.println(response.getStatusLine().getStatusCode());
                         System.out.println(response.getStatusLine().getReasonPhrase());
                         InputStream responseInputStream = response.getEntity().getContent();
@@ -707,8 +708,9 @@ public class SolicitudController {
                      });
                 }
 
+                System.out.println("pre remote path");
                 System.out.println("Remote path"+remotePath);
-
+                System.out.println("fi remote path");
 
                 Date ara = new Date();
                 Solicitud solicitudConvalidacio = solicitudService.getSolicitudConvalidacioById(Long.valueOf(idsolicitud));
