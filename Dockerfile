@@ -23,4 +23,5 @@ RUN mvn clean package -f pom.xml
 FROM maven:3-amazoncorretto-17 as production-stage-convalidacions
 COPY --from=build-stage-convalidacions /resources/target/convalidacions-0.0.1-SNAPSHOT.jar convalidacions.jar
 COPY /config/ /resources/
+COPY /fnmt/ /resources/
 ENTRYPOINT ["java","-jar","/convalidacions.jar"]
