@@ -39,6 +39,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -49,6 +50,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
+import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 import java.io.*;
@@ -64,6 +66,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -627,10 +631,21 @@ public class SolicitudController {
                 //try(CloseableHttpClient client = HttpClientBuilder.create()
                 //        .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build()))
                 //        .build()) {
-                try(CloseableHttpClient client = HttpClientBuilder.create().build()) {
+
+                SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null,
+                                new TrustStrategy() {
+                                    @Override
+                                    public boolean isTrusted(final X509Certificate[] chain, final String authType)
+                                            throws CertificateException {
+                                        return true;
+                                    }
+                                })
+                        .build();
+
+                try(CloseableHttpClient client = HttpClientBuilder.create().setSSLContext(sslContext).build()) {
                     remotePath = client.execute(httpPost, response -> {
                         //do something with response
-                        System.out.println("Response de cridada...");
+                        System.out.println("Response de cridada 2...");
                         System.out.println(response.getStatusLine().getStatusCode());
                         System.out.println(response.getStatusLine().getReasonPhrase());
                         InputStream responseInputStream = response.getEntity().getContent();
