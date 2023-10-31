@@ -624,9 +624,10 @@ public class SolicitudController {
                 httpPost.setEntity(multipart);
 
 
-                try(CloseableHttpClient client = HttpClientBuilder.create()
-                        .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build()))
-                        .build()) {
+                //try(CloseableHttpClient client = HttpClientBuilder.create()
+                //        .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build()))
+                //        .build()) {
+                try(CloseableHttpClient client = HttpClientBuilder.create().build()) {
                     remotePath = client.execute(httpPost, response -> {
                         //do something with response
                         System.out.println("Response de cridada...");
