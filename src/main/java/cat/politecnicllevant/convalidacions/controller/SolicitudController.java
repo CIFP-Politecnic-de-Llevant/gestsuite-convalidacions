@@ -54,6 +54,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -646,8 +647,9 @@ public class SolicitudController {
                 String serverUrl = this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal";
 
                 RestTemplate restTemplate = new RestTemplate();
-                ResponseEntity<String> response = restTemplate.postForEntity(serverUrl, requestEntity, String.class);
-                remotePath = response.getBody();
+                ResponseEntity<ResponseEntity> response = restTemplate.postForEntity(serverUrl, requestEntity, ResponseEntity.class);
+                ResponseEntity<String> responseEntity = response.getBody();
+                remotePath = responseEntity.getBody();
 
 
 
