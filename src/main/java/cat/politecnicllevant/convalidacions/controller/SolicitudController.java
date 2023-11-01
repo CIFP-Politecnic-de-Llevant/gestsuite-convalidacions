@@ -54,7 +54,10 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -635,6 +638,7 @@ public class SolicitudController {
                 //MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                 //body.add("file", new File("/tmp/arxiu_signed.pdf"));
 
+                System.out.println("pre remote path");
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -647,10 +651,11 @@ public class SolicitudController {
                 String serverUrl = this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal";
 
                 RestTemplate restTemplate = new RestTemplate();
+                restTemplate.setMessageConverters(Arrays.asList(new ByteArrayHttpMessageConverter(), new ResourceHttpMessageConverter()));
                 ResponseEntity<ResponseEntity> response = restTemplate.postForEntity(serverUrl, requestEntity, ResponseEntity.class);
                 ResponseEntity<String> responseEntity = response.getBody();
                 remotePath = responseEntity.getBody();
-
+                System.out.println("fi remote path");
 
 
 
