@@ -50,6 +50,7 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -629,6 +630,7 @@ public class SolicitudController {
                 String remotePath = "";
                 String boundary = "---------------"+UUID.randomUUID().toString();
 
+
                 //MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                 //body.add("file", new File("/tmp/arxiu_signed.pdf"));
 
@@ -646,6 +648,16 @@ public class SolicitudController {
                 RestTemplate restTemplate = new RestTemplate();
                 ResponseEntity<String> response = restTemplate.postForEntity(serverUrl, requestEntity, String.class);
                 remotePath = response.getBody();
+
+
+
+
+
+
+
+
+
+
 
                 /*final HttpPost httpPost = new HttpPost(this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal");
 
