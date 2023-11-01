@@ -57,6 +57,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -651,7 +652,7 @@ public class SolicitudController {
                 String serverUrl = this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal";
 
                 RestTemplate restTemplate = new RestTemplate();
-                restTemplate.setMessageConverters(Arrays.asList(new ByteArrayHttpMessageConverter(), new ResourceHttpMessageConverter()));
+                restTemplate.setMessageConverters(Arrays.asList(new ByteArrayHttpMessageConverter(), new ResourceHttpMessageConverter(), new AllEncompassingFormHttpMessageConverter(), new StringHttpMessageConverter(), new MappingJackson2HttpMessageConverter()));
                 ResponseEntity<ResponseEntity> response = restTemplate.postForEntity(serverUrl, requestEntity, ResponseEntity.class);
                 ResponseEntity<String> responseEntity = response.getBody();
                 remotePath = responseEntity.getBody();
