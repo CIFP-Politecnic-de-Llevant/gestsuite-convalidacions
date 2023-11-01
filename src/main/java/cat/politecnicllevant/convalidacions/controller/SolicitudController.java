@@ -2,6 +2,7 @@ package cat.politecnicllevant.convalidacions.controller;
 
 import cat.politecnicllevant.common.model.Notificacio;
 import cat.politecnicllevant.common.model.NotificacioTipus;
+import cat.politecnicllevant.convalidacions.dto.FileUploadDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
@@ -616,145 +617,17 @@ public class SolicitudController {
                 String remotePath = "";
                 String boundary = "---------------"+UUID.randomUUID().toString();
 
-
-                //MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-                //body.add("file", new File("/tmp/arxiu_signed.pdf"));
-
-                System.out.println("pre remote path");
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-                MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-                parts.add("file", new FileSystemResource(new File("/tmp/arxiu_signed.pdf")));
-
-                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(parts, headers);
-
-                String serverUrl = this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal";
-
-                // Create an SSL context that trusts all certificates
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                TrustManager[] trustAllCertificates = new TrustManager[]{
-                        new X509TrustManager() {
-                            public X509Certificate[] getAcceptedIssuers() {
-                                return null;
-                            }
-                            public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                            }
-                            public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                            }
-                        }
-                };
-                sslContext.init(null, trustAllCertificates, new java.security.SecureRandom());
-
-                HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-                factory.setHttpClient(HttpClients.custom().setSslcontext(sslContext).build());
-
-                RestTemplate restTemplate = new RestTemplate(factory);
-
-                //RestTemplate restTemplate = new RestTemplate();
-                restTemplate.getMessageConverters().add(new FormHttpMessageConverter()); // Use FormHttpMessageConverter for multipart form data
-
-                for(Map.Entry<String, List<String>> entry: requestEntity.getHeaders().entrySet()){
-                    System.out.println("Header: "+entry.getKey()+" - "+entry.getValue());
+                //Upload to Core
+                try {
+                    byte[] fileContent = Files.readAllBytes(fileSigned.toPath());
+                    FileUploadDto fileUploadDTO = new FileUploadDto(fileSigned.getName(), fileContent);
+                    ResponseEntity<String> response = coreRestClient.handleFileUpload2(fileUploadDTO);
+                    remotePath = response.getBody();
+                } catch (IOException e) {
+                    // Handle the IOException
+                    //System.out.println(e.getMessage());
                 }
 
-                for(Map.Entry<String, List<Object>> entry: requestEntity.getBody().entrySet()){
-                    System.out.println("Body: "+entry.getKey()+" - "+entry.getValue());
-                }
-
-                ResponseEntity<String> responseEntity = restTemplate.exchange(
-                        serverUrl,
-                        HttpMethod.POST,
-                        requestEntity,
-                        String.class
-                );
-
-
-                remotePath = responseEntity.getBody();
-                System.out.println("fi remote path");
-
-
-
-                /*final HttpPost httpPost = new HttpPost(this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal");
-
-                final HttpEntity httpEntity = MultipartEntityBuilder.create()
-                        .addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf")
-                        .build();
-
-                httpPost.setEntity(httpEntity);
-                httpPost.setHeader("Content-Type", "multipart/form-data; boundary=" + boundary);*/
-
-
-                //try(CloseableHttpClient client = HttpClientBuilder.create()
-                //        .setSSLSocketFactory(new SSLConnectionSocketFactory(SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build()))
-                //        .build()) {
-
-               /* SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null,
-                                new TrustStrategy() {
-                                    @Override
-                                    public boolean isTrusted(final X509Certificate[] chain, final String authType)
-                                            throws CertificateException {
-                                        return true;
-                                    }
-                                })
-                        .build();
-
-                try(CloseableHttpClient client = HttpClientBuilder.create().setSSLContext(sslContext).build()) {
-                    remotePath = client.execute(httpPost, response -> {
-                        //do something with response
-                        System.out.println("Response de cridada 2...");
-                        System.out.println(response.getStatusLine().getStatusCode());
-                        System.out.println(response.getStatusLine().getReasonPhrase());
-                        InputStream responseInputStream = response.getEntity().getContent();
-                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(responseInputStream));
-                        String line = "";
-                        String out = "";
-                        while ((line = bufferedReader.readLine()) != null) {
-                            out += line;
-                        }
-                        return out;
-                    });
-                }*/
-
-                //final HttpGet getMethod = new HttpGet(HOST_WITH_SSL);
-
-                /*
-                final TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
-                final SSLContext sslContext = SSLContexts.custom()
-                        .loadTrustMaterial(null, acceptingTrustStrategy)
-                        .build();
-                final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-                final Registry<ConnectionSocketFactory> socketFactoryRegistry =
-                        RegistryBuilder.<ConnectionSocketFactory> create()
-                                .register("https", sslsf)
-                                .register("http", new PlainConnectionSocketFactory())
-                                .build();
-
-                final BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(socketFactoryRegistry);
-
-                //Upload multipart
-                try( CloseableHttpClient httpClient = HttpClients.custom()
-                        .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build())
-                        .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-                        .build()){
-
-                         remotePath = httpClient.execute(httpPost, response -> {
-                        //do something with response
-                        System.out.println("Response de cridada 6...");
-                        System.out.println(response.getStatusLine().getStatusCode());
-                        System.out.println(response.getStatusLine().getReasonPhrase());
-                        InputStream responseInputStream = response.getEntity().getContent();
-                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(responseInputStream));
-                        String line = "";
-                        String out = "";
-                        while ((line = bufferedReader.readLine()) != null) {
-                            out += line;
-                        }
-                        System.out.println("finalitzada cridada 4...");
-                        return out;
-                     });
-                }
- */
                 System.out.println("pre remote path");
                 System.out.println("Remote path"+remotePath);
                 System.out.println("fi remote path");

@@ -1,6 +1,7 @@
 package cat.politecnicllevant.convalidacions.restclient;
 
 import cat.politecnicllevant.convalidacions.config.FeignSupportConfig;
+import cat.politecnicllevant.convalidacions.dto.FileUploadDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
@@ -46,6 +47,9 @@ public interface CoreRestClient {
 
     @PostMapping("/public/fitxerbucket/uploadlocal")
     ResponseEntity<String> handleFileUpload(@RequestPart(value = "file") final MultipartFile uploadfile) throws IOException;
+
+    @PostMapping("/public/fitxerbucket/uploadlocal2")
+    ResponseEntity<String> handleFileUpload2(@RequestBody FileUploadDto uploadfile) throws IOException;
 
     //GOOGLE STORAGE
     @PostMapping(value = "/googlestorage/generate-signed-url")
