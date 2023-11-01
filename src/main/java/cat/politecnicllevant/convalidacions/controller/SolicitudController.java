@@ -654,6 +654,14 @@ public class SolicitudController {
                 //RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new FormHttpMessageConverter()); // Use FormHttpMessageConverter for multipart form data
 
+                for(Map.Entry<String, List<String>> entry: requestEntity.getHeaders().entrySet()){
+                    System.out.println("Header: "+entry.getKey()+" - "+entry.getValue());
+                }
+
+                for(Map.Entry<String, List<Object>> entry: requestEntity.getBody().entrySet()){
+                    System.out.println("Body: "+entry.getKey()+" - "+entry.getValue());
+                }
+
                 ResponseEntity<String> responseEntity = restTemplate.exchange(
                         serverUrl,
                         HttpMethod.POST,
@@ -661,15 +669,9 @@ public class SolicitudController {
                         String.class
                 );
 
+
                 remotePath = responseEntity.getBody();
                 System.out.println("fi remote path");
-
-
-
-
-
-
-
 
 
 
