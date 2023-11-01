@@ -25,6 +25,7 @@ import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -45,6 +46,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 import java.io.*;
@@ -628,7 +631,27 @@ public class SolicitudController {
 
                 String serverUrl = this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal";
 
-                RestTemplate restTemplate = new RestTemplate();
+                // Create an SSL context that trusts all certificates
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                TrustManager[] trustAllCertificates = new TrustManager[]{
+                        new X509TrustManager() {
+                            public X509Certificate[] getAcceptedIssuers() {
+                                return null;
+                            }
+                            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                            }
+                            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                            }
+                        }
+                };
+                sslContext.init(null, trustAllCertificates, new java.security.SecureRandom());
+
+                HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+                factory.setHttpClient(HttpClients.custom().setSslcontext(sslContext).build());
+
+                RestTemplate restTemplate = new RestTemplate(factory);
+
+                //RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new FormHttpMessageConverter()); // Use FormHttpMessageConverter for multipart form data
 
                 ResponseEntity<String> responseEntity = restTemplate.exchange(
