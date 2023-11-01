@@ -664,10 +664,11 @@ public class SolicitudController {
                     nomAlumne += " " + alumne.getGestibCognom2();
                 }
 
+                /** TODO: Posar el centre com a paràmetre del .properties **/
                 String body = "";
                 body += "Benvolgut/da "+ nomAlumne +", ";
                 body += "<br><br>";
-                body += "Des de Politècnic de Llevant us fem arribar la <strong>resolució</strong> de la convalidació sol·licitada a l'IES Manacor.";
+                body += "Des de Politècnic de Llevant us fem arribar la <strong>resolució</strong> de la convalidació sol·licitada.";
 
                 coreRestClient.sendEmailAttachmentPath(alumne.getGsuiteEmail(),"Resolució de convalidació",body,remotePath);
 
