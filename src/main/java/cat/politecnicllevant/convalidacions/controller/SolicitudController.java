@@ -25,29 +25,6 @@ import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.SSLContexts;
-import org.apache.http.ssl.TrustStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -55,6 +32,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -643,18 +621,23 @@ public class SolicitudController {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-                //HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-                final HttpEntity requestEntity = MultipartEntityBuilder.create()
-                        .setBoundary(boundary)
-                        .addBinaryBody("file", new File("/tmp/arxiu_signed.pdf"), ContentType.APPLICATION_OCTET_STREAM, "arxiu.pdf")
-                        .build();
+                MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+                parts.add("file", new FileSystemResource(new File("/tmp/arxiu_signed.pdf")));
+
+                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(parts, headers);
 
                 String serverUrl = this.coreAddress + "/api/core/public/fitxerbucket/uploadlocal";
 
                 RestTemplate restTemplate = new RestTemplate();
-                restTemplate.setMessageConverters(Arrays.asList(new ByteArrayHttpMessageConverter(), new ResourceHttpMessageConverter(), new AllEncompassingFormHttpMessageConverter(), new StringHttpMessageConverter(), new MappingJackson2HttpMessageConverter()));
-                ResponseEntity<ResponseEntity> response = restTemplate.postForEntity(serverUrl, requestEntity, ResponseEntity.class);
-                ResponseEntity<String> responseEntity = response.getBody();
+                restTemplate.getMessageConverters().add(new FormHttpMessageConverter()); // Use FormHttpMessageConverter for multipart form data
+
+                ResponseEntity<String> responseEntity = restTemplate.exchange(
+                        serverUrl,
+                        HttpMethod.POST,
+                        requestEntity,
+                        String.class
+                );
+
                 remotePath = responseEntity.getBody();
                 System.out.println("fi remote path");
 
