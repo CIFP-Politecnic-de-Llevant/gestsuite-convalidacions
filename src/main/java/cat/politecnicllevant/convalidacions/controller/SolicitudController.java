@@ -683,13 +683,13 @@ public class SolicitudController {
                 //Notifiguem als tutors
                 GrupDto grup = null;
                 if(alumne.getGestibGrup()!=null) {
-                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getGrupById(Long.parseLong(alumne.getGestibGrup()));
+                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getByGestibIdentificador(alumne.getGestibGrup());
                     grup = grupResponse.getBody();
                 } else if(alumne.getGestibGrup2() != null ){
-                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getGrupById(Long.parseLong(alumne.getGestibGrup2()));
+                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getByGestibIdentificador(alumne.getGestibGrup2());
                     grup = grupResponse.getBody();
                 } else if(alumne.getGestibGrup3() != null ){
-                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getGrupById(Long.parseLong(alumne.getGestibGrup3()));
+                    ResponseEntity<GrupDto> grupResponse = coreRestClient.getByGestibIdentificador(alumne.getGestibGrup3());
                     grup = grupResponse.getBody();
                 }
 

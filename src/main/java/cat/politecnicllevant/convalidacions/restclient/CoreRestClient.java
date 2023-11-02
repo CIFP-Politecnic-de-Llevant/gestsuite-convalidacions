@@ -68,4 +68,7 @@ public interface CoreRestClient {
     //GRUP
     @GetMapping("/grup/getById/{idgrup}")
     ResponseEntity<GrupDto> getGrupById(@PathVariable("idgrup") Long idgrup);
+
+    @GetMapping("/grup/getByGestibIdentificador/{idgrup}")
+    ResponseEntity<GrupDto> getByGestibIdentificador(@PathVariable("idgrup") String idgrup);
 }
