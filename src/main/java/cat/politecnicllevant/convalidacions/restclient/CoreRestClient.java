@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -35,7 +36,10 @@ public interface CoreRestClient {
     @GetMapping("/usuaris/profile/{id}")
     ResponseEntity<UsuariDto> getProfile(@PathVariable("id") String idUsuari) throws Exception;
 
-    //FITXER BUCKET
+    @GetMapping("/usuaris/profile-by-gestib-codi/{id}")
+    ResponseEntity<UsuariDto> getUsuariByGestibCodi(@PathVariable("id") String gestibCodi) throws Exception;
+
+        //FITXER BUCKET
     @GetMapping("/fitxerbucket/{id}")
     ResponseEntity<FitxerBucketDto> getFitxerBucketById(@PathVariable("id") Long idfitxerBucket);
 

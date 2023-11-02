@@ -696,17 +696,17 @@ public class SolicitudController {
                 if(grup != null){
                     List<UsuariDto> tutors = new ArrayList<>();
                     if(grup.getGestibTutor1()!=null){
-                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getProfile(grup.getGestibTutor1());
+                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getUsuariByGestibCodi(grup.getGestibTutor1());
                         UsuariDto tutor = tutorResponse.getBody();
                         tutors.add(tutor);
                     }
                     if(grup.getGestibTutor2()!=null){
-                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getProfile(grup.getGestibTutor2());
+                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getUsuariByGestibCodi(grup.getGestibTutor2());
                         UsuariDto tutor = tutorResponse.getBody();
                         tutors.add(tutor);
                     }
                     if(grup.getGestibTutor3()!=null){
-                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getProfile(grup.getGestibTutor3());
+                        ResponseEntity<UsuariDto> tutorResponse = coreRestClient.getUsuariByGestibCodi(grup.getGestibTutor3());
                         UsuariDto tutor = tutorResponse.getBody();
                         tutors.add(tutor);
                     }
