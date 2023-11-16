@@ -110,10 +110,6 @@ public class SolicitudController {
     @Value("${centre.convalidacions.notificar-resolucions}")
     private String notificarResolucionsEmails;
 
-    @Value("${microservice.core.address}")
-    private String coreAddress;
-
-
 
     @GetMapping("/solicitud/llistat")
     public ResponseEntity<List<Solicitud>> getSolicituds() {
