@@ -1,31 +1,15 @@
 package cat.politecnicllevant.convalidacions.restclient;
 
-import cat.politecnicllevant.convalidacions.config.FeignSupportConfig;
 import cat.politecnicllevant.convalidacions.dto.FileUploadDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
-import feign.Headers;
-import feign.RequestLine;
-import feign.form.spring.SpringFormEncoder;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.openfeign.support.SpringEncoder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.codec.Encoder;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
