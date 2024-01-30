@@ -23,7 +23,7 @@ public interface CoreRestClient {
     @GetMapping("/usuaris/profile-by-gestib-codi/{id}")
     ResponseEntity<UsuariDto> getUsuariByGestibCodi(@PathVariable("id") String gestibCodi) throws Exception;
 
-        //FITXER BUCKET
+    //FITXER BUCKET
     @GetMapping("/fitxerbucket/{id}")
     ResponseEntity<FitxerBucketDto> getFitxerBucketById(@PathVariable("id") Long idfitxerBucket);
 
