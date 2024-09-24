@@ -1,5 +1,6 @@
 package cat.politecnicllevant.convalidacions.service;
 
+import cat.politecnicllevant.convalidacions.dto.core.gestib.CursAcademicDto;
 import cat.politecnicllevant.convalidacions.model.Convalidacio;
 import cat.politecnicllevant.convalidacions.model.Item;
 import cat.politecnicllevant.convalidacions.model.Resolucio;
@@ -7,6 +8,7 @@ import cat.politecnicllevant.convalidacions.model.Solicitud;
 import cat.politecnicllevant.convalidacions.repository.ConvalidacioRepository;
 import cat.politecnicllevant.convalidacions.repository.ResolucioRepository;
 import cat.politecnicllevant.convalidacions.repository.SolicitudRepository;
+import cat.politecnicllevant.convalidacions.restclient.CoreRestClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +29,11 @@ public class SolicitudService {
     @Autowired
     private ConvalidacioRepository convalidacioRepository;
 
-    public List<Solicitud> findAll(){
-       return solicitudRepository.findAll();
+    @Autowired
+    private CoreRestClient coreRestClient;
+
+    public List<Solicitud> findAll(CursAcademicDto cursAcademicDto){
+       return solicitudRepository.findAllByCursAcademic(cursAcademicDto.getIdcursAcademic());
     }
 
     public Solicitud getSolicitudConvalidacioById(Long id){
@@ -38,8 +43,14 @@ public class SolicitudService {
     }
 
     @Transactional
-    public Solicitud save(Solicitud solicitud) {
-        return solicitudRepository.save(solicitud);
+    public Solicitud save(Solicitud solicitud) throws Exception {
+        CursAcademicDto cursAcademicActual = coreRestClient.getActualCursAcademic().getBody();
+        if(solicitud.getCursAcademic() == null){
+            solicitud.setCursAcademic(cursAcademicActual.getIdcursAcademic());
+        } else if(solicitud.getCursAcademic().equals(cursAcademicActual.getIdcursAcademic())){
+            return solicitudRepository.save(solicitud);
+        }
+        throw new RuntimeException("El curs acadèmic de la sol·licitud no és l'actual");
     }
 
     @Transactional

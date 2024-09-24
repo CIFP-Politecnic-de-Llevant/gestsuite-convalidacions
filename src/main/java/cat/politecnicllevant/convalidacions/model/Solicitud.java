@@ -69,4 +69,7 @@ public @Data class Solicitud {
 
     @ElementCollection
     private Set<Long> fitxersAlumne = new HashSet<>();
+
+    @Column(name = "curs_academic_idcurs_academic", nullable = false)
+    private Long cursAcademic;
 }

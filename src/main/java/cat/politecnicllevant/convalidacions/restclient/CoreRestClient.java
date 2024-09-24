@@ -1,6 +1,7 @@
 package cat.politecnicllevant.convalidacions.restclient;
 
 import cat.politecnicllevant.convalidacions.dto.FileUploadDto;
+import cat.politecnicllevant.convalidacions.dto.core.gestib.CursAcademicDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.mail.MessagingException;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 @FeignClient(name = "core")
 public interface CoreRestClient {
@@ -59,4 +61,14 @@ public interface CoreRestClient {
 
     @GetMapping("/grup/getByGestibIdentificador/{idgrup}")
     ResponseEntity<GrupDto> getByGestibIdentificador(@PathVariable("idgrup") String idgrup);
+
+    //CURS ACADÈMIC
+    @GetMapping("/cursAcademic/findAll")
+    ResponseEntity<List<CursAcademicDto>> findAllCursosAcademics();
+
+    @GetMapping("/cursAcademic/actual")
+    ResponseEntity<CursAcademicDto> getActualCursAcademic();
+
+    @GetMapping("/cursAcademic/getById/{id}")
+    ResponseEntity<CursAcademicDto> getCursAcademicById(@PathVariable("id") Long identificador);
 }

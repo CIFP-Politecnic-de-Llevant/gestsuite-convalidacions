@@ -3,6 +3,7 @@ package cat.politecnicllevant.convalidacions.controller;
 import cat.politecnicllevant.common.model.Notificacio;
 import cat.politecnicllevant.common.model.NotificacioTipus;
 import cat.politecnicllevant.convalidacions.dto.FileUploadDto;
+import cat.politecnicllevant.convalidacions.dto.core.gestib.CursAcademicDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.GrupDto;
 import cat.politecnicllevant.convalidacions.dto.core.gestib.UsuariDto;
 import cat.politecnicllevant.convalidacions.dto.google.FitxerBucketDto;
@@ -77,8 +78,14 @@ public class SolicitudController {
 
 
     @GetMapping("/solicitud/llistat")
-    public ResponseEntity<List<Solicitud>> getSolicituds() {
-        List<Solicitud> solicituds = solicitudService.findAll();
+    public ResponseEntity<List<Solicitud>> getSolicituds(@RequestParam(value = "cursAcademic", required = false) Long cursAcademic) {
+        CursAcademicDto cursAcademicDto;
+        if(cursAcademic==null){
+            cursAcademicDto = coreRestClient.getActualCursAcademic().getBody();
+        } else {
+            cursAcademicDto = coreRestClient.getCursAcademicById(cursAcademic).getBody();
+        }
+        List<Solicitud> solicituds = solicitudService.findAll(cursAcademicDto);
 
         return new ResponseEntity<>(solicituds, HttpStatus.OK);
     }
@@ -132,7 +139,15 @@ public class SolicitudController {
         } else if(estat.equals("standby")) {
             solicitud.setEstat(SolcititudEstat.STAND_BY);
         }
-        solicitudService.save(solicitud);
+
+        try {
+            solicitudService.save(solicitud);
+        } catch (Exception e) {
+            Notificacio notificacio = new Notificacio();
+            notificacio.setNotifyMessage(e.getMessage());
+            notificacio.setNotifyType(NotificacioTipus.ERROR);
+            return new ResponseEntity<>(notificacio, HttpStatus.OK);
+        }
 
         Notificacio notificacio = new Notificacio();
         notificacio.setNotifyMessage("Sol·licitud desada correctament");
@@ -357,46 +372,55 @@ public class SolicitudController {
         //Estat
         solicitud.setEstat(SolcititudEstat.PENDENT_RESOLUCIO);
 
-        Solicitud solicitudConvalidacio = solicitudService.save(solicitud);
+        try{
 
-        //Resolucions
-        List<Item> convalidacions = solicitudService.calculaConvalidacions(solicitudConvalidacio);
-        JsonArray resolucionsJSON = jsonObject.get("resolucions").getAsJsonArray();
+            Solicitud solicitudConvalidacio = solicitudService.save(solicitud);
 
-        //Flag per comprovar si totes les resolución estan resoltes (APROVAT o DENEGAT)
-        for (JsonElement resolucioJSON : resolucionsJSON) {
-            Resolucio resolucioConvalidacio = new Resolucio();
+            //Resolucions
+            List<Item> convalidacions = solicitudService.calculaConvalidacions(solicitudConvalidacio);
+            JsonArray resolucionsJSON = jsonObject.get("resolucions").getAsJsonArray();
 
-            resolucioConvalidacio.setSolicitud(solicitudConvalidacio);
+            //Flag per comprovar si totes les resolución estan resoltes (APROVAT o DENEGAT)
+            for (JsonElement resolucioJSON : resolucionsJSON) {
+                Resolucio resolucioConvalidacio = new Resolucio();
+
+                resolucioConvalidacio.setSolicitud(solicitudConvalidacio);
 
 
-            String qualificacio = "";
-            resolucioConvalidacio.setQualificacio(qualificacio);
+                String qualificacio = "";
+                resolucioConvalidacio.setQualificacio(qualificacio);
 
-            Long idEstudi = resolucioJSON.getAsJsonObject().get("estudi").getAsJsonObject().get("id").getAsLong();
-            Item estudi = itemService.getItemConvalidacioById(idEstudi);
-            resolucioConvalidacio.setEstudi(estudi);
+                Long idEstudi = resolucioJSON.getAsJsonObject().get("estudi").getAsJsonObject().get("id").getAsLong();
+                Item estudi = itemService.getItemConvalidacioById(idEstudi);
+                resolucioConvalidacio.setEstudi(estudi);
 
-            boolean convalidacioFound = convalidacions.stream().anyMatch(c->c.getIditem().equals(resolucioConvalidacio.getEstudi().getIditem()));
+                boolean convalidacioFound = convalidacions.stream().anyMatch(c->c.getIditem().equals(resolucioConvalidacio.getEstudi().getIditem()));
 
-            if(convalidacioFound){
-                resolucioConvalidacio.setEstat(ResolucioEstat.PREAPROVAT);
-            } else {
-                resolucioConvalidacio.setEstat(ResolucioEstat.PENDENT);
+                if(convalidacioFound){
+                    resolucioConvalidacio.setEstat(ResolucioEstat.PREAPROVAT);
+                } else {
+                    resolucioConvalidacio.setEstat(ResolucioEstat.PENDENT);
+                }
+
+                if (resolucioJSON.getAsJsonObject().get("observacions") != null && !resolucioJSON.getAsJsonObject().get("observacions").isJsonNull()) {
+                    String resolucioObservacions = resolucioJSON.getAsJsonObject().get("observacions").getAsString();
+                    resolucioConvalidacio.setObservacions(resolucioObservacions);
+                }
+
+                resolucioService.save(resolucioConvalidacio);
             }
 
-            if (resolucioJSON.getAsJsonObject().get("observacions") != null && !resolucioJSON.getAsJsonObject().get("observacions").isJsonNull()) {
-                String resolucioObservacions = resolucioJSON.getAsJsonObject().get("observacions").getAsString();
-                resolucioConvalidacio.setObservacions(resolucioObservacions);
-            }
+            //Actualitzem l'estat de la sol·licitud depenent de les resolucions
+            solicitud.setEstat(SolcititudEstat.PENDENT_RESOLUCIO);
 
-            resolucioService.save(resolucioConvalidacio);
+            solicitudService.save(solicitud);
+
+        } catch (Exception e) {
+            Notificacio notificacio = new Notificacio();
+            notificacio.setNotifyMessage(e.getMessage());
+            notificacio.setNotifyType(NotificacioTipus.ERROR);
+            return new ResponseEntity<>(notificacio, HttpStatus.OK);
         }
-
-        //Actualitzem l'estat de la sol·licitud depenent de les resolucions
-        solicitud.setEstat(SolcititudEstat.PENDENT_RESOLUCIO);
-
-        solicitudService.save(solicitud);
 
         Notificacio notificacio = new Notificacio();
         notificacio.setNotifyMessage("Sol·licitud enregistrada correctament");
