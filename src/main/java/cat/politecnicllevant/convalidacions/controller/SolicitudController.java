@@ -106,7 +106,10 @@ public class SolicitudController {
                 jsonFitxerBucket.addProperty("bucket", fitxerBucket.getBucket());
                 jsonFitxerBucket.addProperty("path", fitxerBucket.getPath());
 
-                ResponseEntity<String> urlResponse = coreRestClient.generateSignedURL(jsonFitxerBucket.toString());
+                JsonObject jsonFitxerBucketWrap = new JsonObject();
+                jsonFitxerBucketWrap.add("fitxerBucket", jsonFitxerBucket);
+
+                ResponseEntity<String> urlResponse = coreRestClient.generateSignedURL(jsonFitxerBucketWrap.toString());
                 String url = urlResponse.getBody();
 
                 fitxerBucket.setUrl(url);
@@ -301,6 +304,11 @@ public class SolicitudController {
         //Introduim només una vegada la data de creació de la sol·licitud
         Date ara = new Date();
         solicitud.setDataCreacio(ara);
+
+        CursAcademicDto cursAcademicDto = coreRestClient.getActualCursAcademic().getBody();
+        if(cursAcademicDto!=null) {
+            solicitud.setCursAcademic(cursAcademicDto.getIdcursAcademic());
+        }
 
         //Alumne
         String nomAlumne = jsonObject.get("nomAlumneManual").getAsString();
