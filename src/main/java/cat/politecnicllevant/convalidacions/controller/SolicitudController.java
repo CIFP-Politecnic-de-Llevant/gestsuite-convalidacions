@@ -366,7 +366,7 @@ public class SolicitudController {
                 File arxiu = new File(pathArxiu);
                 System.out.println("Arxiu desat a " + pathArxiu);
 
-                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(bucketPathFiles + "/filesalumnes/"+ arxiu.getName(), pathArxiu, bucketName);
+                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(bucketPathFiles + "/filesalumnes/"+ arxiu.getName(), pathArxiu, "application/pdf", bucketName);
                 FitxerBucketDto fitxerBucket = fitxerBucketResponse.getBody();
 
                 ResponseEntity<FitxerBucketDto> fitxerBucketSavedResponse = coreRestClient.save(fitxerBucket);
@@ -633,7 +633,7 @@ public class SolicitudController {
                 ResponseEntity<UsuariDto> alumneResponse = coreRestClient.getProfile(solicitudConvalidacio.getAlumne().toString());
                 UsuariDto alumne = alumneResponse.getBody();
 
-                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(this.bucketPathFiles+"/"+alumne.getGestibExpedient()+"/convalidacio_"+ara.getTime()+".pdf",remotePath,bucketName);
+                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(this.bucketPathFiles+"/"+alumne.getGestibExpedient()+"/convalidacio_"+ara.getTime()+".pdf",remotePath, "application/pdf",bucketName);
                 FitxerBucketDto fitxerBucket = fitxerBucketResponse.getBody();
 
                 ResponseEntity<FitxerBucketDto> fitxerBucketSavedResponse = coreRestClient.save(fitxerBucket);
