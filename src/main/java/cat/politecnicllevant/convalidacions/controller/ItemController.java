@@ -42,6 +42,14 @@ public class ItemController {
         return new ResponseEntity<>(items, HttpStatus.OK);
     }
 
+    @GetMapping({"/titulacions/loe"})
+    public ResponseEntity<List<Item>> getTitulacionsLoe() {
+        List<Item> items = itemService.findAll();
+        items = items.stream().filter(i->i.getCategoria().getIdcategoria() == 1).toList();
+
+        return new ResponseEntity<>(items, HttpStatus.OK);
+    }
+
     @GetMapping({"/titulacions/all","/public/titulacions/all"})
     public ResponseEntity<List<Item>> getTitulacionsTotes() {
         List<Item> items = itemService.findAllTitulacions();
@@ -79,8 +87,13 @@ public class ItemController {
         if(jsonObject.get("codi")!=null && !jsonObject.get("codi").isJsonNull()) {
             codi = jsonObject.get("codi").getAsString();
         }
+
         String nom = jsonObject.get("nom").getAsString();
-        String nomOriginal = jsonObject.get("nomOriginal").getAsString();
+
+        String nomOriginal = "";
+        if(jsonObject.get("nomOriginal")!=null && !jsonObject.get("nomOriginal").isJsonNull()) {
+            nomOriginal = jsonObject.get("nomOriginal").getAsString();
+        }
         Boolean impartitAlCentre = jsonObject.get("impartitAlCentre").getAsBoolean();
 
         String idCategoria = jsonObject.get("categoria").getAsJsonObject().get("value").getAsString();
