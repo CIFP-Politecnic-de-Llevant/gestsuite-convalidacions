@@ -183,6 +183,11 @@ public class SolicitudController {
             solicitud.setDataCreacio(ara);
         }
 
+        CursAcademicDto cursAcademicDto = coreRestClient.getActualCursAcademic().getBody();
+        if(cursAcademicDto!=null) {
+            solicitud.setCursAcademic(cursAcademicDto.getIdcursAcademic());
+        }
+
         //Alumne
         JsonObject alumneJSON = jsonObject.get("alumne").getAsJsonObject();
         String idAlumne = alumneJSON.get("id").getAsString();
@@ -366,7 +371,13 @@ public class SolicitudController {
                 File arxiu = new File(pathArxiu);
                 System.out.println("Arxiu desat a " + pathArxiu);
 
-                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(bucketPathFiles + "/filesalumnes/"+ arxiu.getName(), pathArxiu, "application/pdf", bucketName);
+                String contentType = Files.probeContentType(arxiu.toPath());
+                if (contentType == null) {
+                    // Fallback to a default content type if detection fails
+                    contentType = "application/octet-stream";
+                }
+
+                ResponseEntity<FitxerBucketDto> fitxerBucketResponse = coreRestClient.uploadObject(bucketPathFiles + "/filesalumnes/"+ arxiu.getName(), pathArxiu, contentType, bucketName);
                 FitxerBucketDto fitxerBucket = fitxerBucketResponse.getBody();
 
                 ResponseEntity<FitxerBucketDto> fitxerBucketSavedResponse = coreRestClient.save(fitxerBucket);
